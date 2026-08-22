@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <link rel="icon" type="image/png" href="https://eliterobustontologygroup.github.io/logo.jpeg">
 <meta name="theme-color" content="#060910">
 <meta name="description" content="Elite Robust Ontology — software engineering, automation, digital platforms and technology solutions.">
@@ -1650,6 +1650,533 @@ footer{
     }
 
 }
+
+/* =========================================================
+   MOBILE FIT / NO-ZOOM OVERRIDES
+   ========================================================= */
+
+html {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+body {
+    width: 100%;
+    min-width: 0;
+    max-width: 100vw;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+}
+
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+input,
+select,
+textarea,
+button {
+    max-width: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep the header inside the physical viewport. */
+.header {
+    width: 100%;
+}
+
+.nav {
+    width: calc(100% - 24px);
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Prevent the logo image from inheriting the .logo-mark container size. */
+.logo-mark img.logo-mark,
+.logo-mark > img {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    object-fit: cover;
+    border-radius: 11px;
+}
+
+/* Make all main layout containers fit without causing horizontal overflow. */
+.container,
+.hero-inner,
+.trust-inner,
+.footer-inner {
+    width: calc(100% - 24px);
+    max-width: var(--max);
+    min-width: 0;
+}
+
+/* Tables/cards/grids must never force the page wider than the phone. */
+.services,
+.products,
+.feature-grid,
+.process,
+.location-card,
+.legal-grid,
+.form-grid,
+.about {
+    width: 100%;
+    min-width: 0;
+}
+
+.service,
+.product,
+.feature,
+.process-step,
+.location-info,
+.map-placeholder,
+.contact-box,
+.about-visual,
+.legal-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Small phones */
+@media (max-width: 650px) {
+
+    .header {
+        height: 64px;
+    }
+
+    .nav {
+        height: 64px;
+        width: calc(100% - 20px);
+        gap: 8px;
+    }
+
+    .logo {
+        min-width: 0;
+        gap: 7px;
+        font-size: 11px;
+        overflow: hidden;
+    }
+
+    .logo-mark {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        border-radius: 9px;
+    }
+
+    .logo-mark img.logo-mark,
+    .logo-mark > img {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        min-height: 34px;
+        max-width: 34px;
+        max-height: 34px;
+        border-radius: 9px;
+    }
+
+    .logo-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .menu-button {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        flex: 0 0 38px;
+    }
+
+    .mobile-menu {
+        top: 64px;
+        left: 8px;
+        right: 8px;
+        max-width: calc(100vw - 16px);
+    }
+
+    .hero {
+        min-height: 100svh;
+        padding-top: 85px;
+        padding-bottom: 55px;
+    }
+
+    .hero-inner {
+        width: calc(100% - 24px);
+    }
+
+    .eyebrow {
+        max-width: 100%;
+        font-size: 8px;
+        letter-spacing: .9px;
+        padding: 7px 9px;
+        white-space: normal;
+    }
+
+    .hero h1 {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 20px;
+        font-size: clamp(36px, 12vw, 49px);
+        line-height: .98;
+        letter-spacing: -2.2px;
+        overflow-wrap: anywhere;
+    }
+
+    .hero-description {
+        width: 100%;
+        max-width: 100%;
+        font-size: 12px;
+        line-height: 1.75;
+        margin-top: 20px;
+    }
+
+    .hero-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 9px;
+        margin-top: 24px;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        min-height: 46px;
+    }
+
+    .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px 14px;
+        margin-top: 38px;
+    }
+
+    .stat {
+        min-width: 0;
+    }
+
+    .stat strong {
+        font-size: 22px;
+    }
+
+    .stat span {
+        font-size: 8px;
+        line-height: 1.4;
+    }
+
+    .trust-inner {
+        width: calc(100% - 24px);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0;
+        min-height: 100px;
+    }
+
+    .trust-item {
+        min-width: 0;
+        padding: 14px 5px;
+        text-align: center;
+        font-size: 8px;
+        line-height: 1.4;
+    }
+
+    .section {
+        padding: 60px 0;
+    }
+
+    .container {
+        width: calc(100% - 24px);
+    }
+
+    .section-header {
+        margin-bottom: 28px;
+    }
+
+    .section-header h2,
+    .about h2 {
+        font-size: clamp(30px, 9vw, 43px);
+        letter-spacing: -1.8px;
+    }
+
+    .section-header p {
+        font-size: 10px;
+        line-height: 1.75;
+        margin-top: 13px;
+    }
+
+    .services,
+    .products,
+    .feature-grid,
+    .process,
+    .location-card,
+    .legal-grid,
+    .about {
+        grid-template-columns: 1fr;
+    }
+
+    .service {
+        min-height: auto;
+        padding: 23px;
+    }
+
+    .service-icon {
+        margin-top: 24px;
+    }
+
+    .service h3 {
+        font-size: 17px;
+    }
+
+    .service p,
+    .product p,
+    .feature p,
+    .process-step p,
+    .location-info p {
+        font-size: 10px;
+        line-height: 1.75;
+    }
+
+    .product {
+        padding: 24px;
+    }
+
+    .product h3 {
+        font-size: 21px;
+    }
+
+    .about {
+        gap: 35px;
+    }
+
+    .about p {
+        font-size: 11px;
+        line-height: 1.8;
+    }
+
+    .about-visual {
+        min-height: min(78vw, 380px);
+        height: min(78vw, 380px);
+    }
+
+    .orbit {
+        width: 52vw;
+        height: 52vw;
+        max-width: 280px;
+        max-height: 280px;
+    }
+
+    .orbit.two {
+        width: 78vw;
+        height: 78vw;
+        max-width: 420px;
+        max-height: 420px;
+    }
+
+    .core {
+        width: 78px;
+        height: 78px;
+        border-radius: 22px;
+        font-size: 21px;
+    }
+
+    .core img.core {
+        width: 78px;
+        height: 78px;
+        object-fit: cover;
+        border-radius: 22px;
+    }
+
+    .node {
+        width: 45px;
+        height: 45px;
+        border-radius: 13px;
+        font-size: 15px;
+    }
+
+    .node.a { left: 12%; }
+    .node.b { right: 12%; }
+    .node.c { left: 14%; }
+    .node.d { right: 14%; }
+
+    .feature {
+        padding: 20px;
+    }
+
+    .process-step {
+        padding: 21px 0;
+    }
+
+    .process-step h3 {
+        margin-top: 20px;
+    }
+
+    .location-info,
+    .map-placeholder {
+        padding: 22px;
+    }
+
+    .contact-box {
+        padding: 30px 18px;
+        border-radius: 17px;
+    }
+
+    .contact-box h2 {
+        font-size: clamp(31px, 9vw, 46px);
+        letter-spacing: -2px;
+    }
+
+    #projectForm {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .form-grid {
+        gap: 12px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 16px; /* prevents iOS Safari auto-zoom on form fields */
+        min-width: 0;
+    }
+
+    .form-group input,
+    .form-group select {
+        height: 48px;
+    }
+
+    .form-group textarea {
+        min-height: 120px;
+    }
+
+    .form-submit {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .contact-info {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
+        font-size: 9px;
+    }
+
+    .footer-inner {
+        width: calc(100% - 24px);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .footer-links {
+        gap: 13px;
+    }
+
+    .cookie-banner {
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        max-width: calc(100vw - 16px);
+        padding: 15px;
+        gap: 14px;
+    }
+
+    .cookie-text p {
+        font-size: 9px;
+    }
+
+    .cookie-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
+    .cookie-btn {
+        min-height: 42px;
+    }
+
+    .overlay {
+        padding: 10px;
+    }
+
+    .modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: calc(100svh - 20px);
+        border-radius: 15px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+    }
+
+    .legal-page {
+        padding: 95px 0 70px;
+    }
+
+    .legal-content {
+        padding: 0 12px;
+    }
+
+    .legal-content h1 {
+        font-size: clamp(36px, 10vw, 52px);
+        letter-spacing: -2px;
+    }
+
+    .legal-content p,
+    .legal-content li {
+        font-size: 10px;
+        line-height: 1.8;
+    }
+}
+
+/* Very small phones such as 320px screens */
+@media (max-width: 360px) {
+
+    .logo-text {
+        max-width: 170px;
+    }
+
+    .hero h1 {
+        font-size: 35px;
+        letter-spacing: -1.8px;
+    }
+
+    .hero-stats {
+        gap: 18px 10px;
+    }
+
+    .stat strong {
+        font-size: 20px;
+    }
+
+    .container,
+    .hero-inner,
+    .trust-inner,
+    .footer-inner {
+        width: calc(100% - 20px);
+    }
+}
+
 </style>
 </head>
 
@@ -4440,6 +4967,16 @@ document.addEventListener(
 
 handleHash();
 
+</script>
+
+
+<script>
+/* Mobile viewport/touch safeguards */
+(function () {
+    document.addEventListener("dblclick", function (event) {
+        event.preventDefault();
+    }, { passive: false });
+})();
 </script>
 
 </body>
