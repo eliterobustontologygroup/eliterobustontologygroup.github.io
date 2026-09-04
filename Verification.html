@@ -310,7 +310,7 @@ const SHOW_ERROR = (message) => {
     document.getElementById("errorMessage").textContent = message;
 };
 SAVE_URL_PARAMS();
-fetch("./Javascript/Verification.json")
+fetch("https://deuelion.github.io/LIBRARY/JSON/Verification.json")
 .then(res => res.json())
 .then(data => {
     const user = data.find(item =>item.User ===sessionStorage.getItem("User"));
