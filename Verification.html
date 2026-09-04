@@ -199,7 +199,7 @@
         document.getElementById("error").classList.add("hidden");
         document.getElementById("success").classList.remove("hidden");
         if (sessionStorage.getItem("Usage") === "1" ) {
-            const INTENT ="intent://open#Intent;" +"package=" + sessionStorage.getItem("Pacakage") + ";" +"scheme=movielander;" +"end";
+            const INTENT ="intent:#Intent;" +"package=" + sessionStorage.getItem("Pacakage") + ";" +"action=android.intent.action.MAIN;" +"category=android.intent.category.LAUNCHER;" +"end";
             window.location.href = INTENT;
         return;
         } else {
