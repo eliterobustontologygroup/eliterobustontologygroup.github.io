@@ -5,405 +5,281 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="https://eliterobustontologygroup.github.io/logo.jpeg" type="image/x-icon">
     <title>Elite Robust Ontology Verification</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            color: white;
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        font-family: Inter, Arial, sans-serif;
+        background:
+            radial-gradient(circle at top left, rgba(99, 102, 241, .18), transparent 35%),
+            radial-gradient(circle at bottom right, rgba(14, 165, 233, .15), transparent 35%),
+            #080b14;
+        color: #fff;
+    }
+    .verification-card {
+        width: 100%;
+        max-width: 460px;
+        padding: 42px 32px;
+        text-align: center;
+        background: rgba(17, 24, 39, .88);
+        border: 1px solid rgba(255, 255, 255, .08);
+        border-radius: 28px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, .45);
+        backdrop-filter: blur(18px);
+        animation: appear .5s ease;
+    }
+    .logo {
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #6366f1, #0ea5e9);
+        font-size: 30px;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(99, 102, 241, .3);
+    }
+    h1 {
+        font-size: 25px;
+        margin-bottom: 10px;
+        letter-spacing: -.5px;
+    }
+    .subtitle {
+        color: #9ca3af;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+    .status-icon {
+        width: 82px;
+        height: 82px;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 38px;
+        background: rgba(99, 102, 241, .12);
+        border: 1px solid rgba(99, 102, 241, .25);
+    }
+    .status-title {
+        font-size: 21px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    .status-message {
+        color: #9ca3af;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .loader {
+        width: 32px;
+        height: 32px;
+        margin: 5px auto 0;
+        border: 3px solid rgba(255, 255, 255, .12);
+        border-top-color: #6366f1;
+        border-radius: 50%;
+        animation: spin .8s linear infinite;
+    }
+    .success {
+        background: rgba(34, 197, 94, .12);
+        border-color: rgba(34, 197, 94, .3);
+    }
+    .error {
+        background: rgba(239, 68, 68, .12);
+        border-color: rgba(239, 68, 68, .3);
+    }
+    .footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, .07);
+        color: #6b7280;
+        font-size: 11px;
+    }
+    .hidden {
+        display: none;
+    }
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
         }
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            font-family:
-                Inter,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Arial,
-                sans-serif;
-            background: #102348;
-            color: white;
+    }
+    @keyframes appear {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
         }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    @media (max-width: 480px) {
         .verification-card {
-            width: 100%;
-            max-width: 440px;
-            background: #261585;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            padding: 40px 35px 25px;
-            text-align: center;
-            box-shadow:0 15px 45px rgba(15, 23, 42, .08);
-            animation: cardIn .4s ease;
-        }
-        .logo {
-            width: 64px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 18px;
-            border-radius: 14px;
-            background: #111827;
-            color: #ffffff;
-            font-size: 19px;
-            font-weight: 800;
-            letter-spacing: -.5px;
+            padding: 34px 22px;
+            border-radius: 22px;
         }
         h1 {
             font-size: 22px;
-            font-weight: 700;
-            color: white;
         }
-        .subtitle {
-            margin-top: 7px;
-            margin-bottom: 32px;
-            color: #7b8495;
-            font-size: 13px;
-        }
-        .status-container {
-            min-height: 215px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .status-icon {
-            width: 76px;
-            height: 76px;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: #f4f6f9;
-            border: 1px solid #e5e7eb;
-        }
-        .loader {
-            width: 27px;
-            height: 27px;
-            border: 3px solid #e5e7eb;
-            border-top-color: #111827;
-            border-radius: 50%;
-            animation: spin .75s linear infinite;
-        }
-        .status-title {
-            margin-bottom: 8px;
-            font-size: 18px;
-            font-weight: 700;
-            color: white;
-        }
-        .status-message {
-            max-width: 310px;
-            margin: auto;
-            color: white;
-            font-size: 13px;
-            line-height: 1.65;
-        }
-        .success {
-            background: #ecfdf3;
-            border-color: #bbf7d0;
-        }
-        .success-mark {
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: #22c55e;
-            color: #ffffff;
-            font-size: 22px;
-            font-weight: 700;
-            animation: successIn .4s ease;
-        }
-        .error {
-            background: #fef2f2;
-            border-color: #fecaca;
-        }
-        .error-mark {
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: #ef4444;
-            color: #ffffff;
-            font-size: 21px;
-            font-weight: 700;
-        }
-        .open-app-container {
-            margin-top: 25px;
-        }
-        .open-app-button {
-            width: 100%;
-            min-height: 48px;
-            border: none;
-            border-radius: 10px;
-            background: #111827;
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition:
-                transform .15s ease,
-                background .15s ease,
-                box-shadow .15s ease;
-        }
-        .open-app-button:hover {
-            background: #1f2937;
-            box-shadow:
-                0 7px 18px rgba(15, 23, 42, .15);
-        }
-        .open-app-button:active {
-            transform: scale(.98);
-        }
-        .open-app-button span {
-            margin-right: 7px;
-        }
-        .app-note {
-            margin-top: 9px;
-            color: white;
-            font-size: 11px;
-        }
-        .footer {
-            margin-top: 28px;
-            padding-top: 18px;
-            border-top: 1px solid #edf0f4;
-            color: white;
-            font-size: 11px;
-            line-height: 1.5;
-        }
-        .footer strong {
-            color: white;
-        }
-        .hidden {
-            display: none !important;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        @keyframes cardIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        @keyframes successIn {
-            from {
-                opacity: 0;
-                transform: scale(.7);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        @media (max-width: 480px) {
-            body {
-                padding: 15px;
-            }
-            .verification-card {
-                padding: 32px 22px 24px;
-            }
-            .logo {
-                width: 58px;
-                height: 58px;
-                font-size: 17px;
-            }
-            h1 {
-                font-size: 20px;
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
 <div class="verification-card">
-    <div class="logo">
-        <img class="logo" src="https://eliterobustontologygroup.github.io/logo.jpeg">
+    <img class="logo" src="https://eliterobustontologygroup.github.io/logo.jpeg">
+    <h1>Elite Robust Ontology</h1>
+    <p class="subtitle">
+        Account verification
+    </p>
+    <div id="loading">
+        <div class="status-icon">
+            <div class="loader"></div>
+        </div>
+        <div class="status-title">
+            Verifying Account
+        </div>
+        <div class="status-message">
+            Please wait while we verify your account...
+        </div>
     </div>
-    <h1>Verification</h1>
-    <p class="subtitle">Account verification</p>
-    <div class="status-container">
-        <div id="loading">
-            <div class="status-icon">
-                <div class="loader"></div>
-            </div>
-            <div class="status-title">Verifying Account</div>
-            <div class="status-message">Please wait while we verify your account.</div>
+    <div id="success" class="hidden">
+        <div class="status-icon success">
+            ✓
         </div>
-        <div id="success" class="hidden">
-            <div class="status-icon success">
-                <div class="success-mark">✓</div>
-            </div>
-            <div class="status-title">Email Verified</div>
-            <div class="status-message">Your account has been successfully verified.</div>
-            <div class="open-app-container">
-                <button class="open-app-button" onclick="OPEN_MOVIE_LANDER()">
-                    <span>▶</span>Continue
-                </button>
-                <div class="app-note">
-                    Continue to the Application
-                </div>
-            </div>
+        <div class="status-title">
+            Email Verified
         </div>
-        <div id="error" class="hidden">
-            <div class="status-icon error">
-                <div class="error-mark">!</div>
-            </div>
-            <div class="status-title">Verification Failed</div>
-            <div id="errorMessage" class="status-message">We could not verify your account.</div>
+        <div class="status-message">
+            Your account has been successfully verified.
+        </div>
+    </div>
+    <div id="error" class="hidden">
+        <div class="status-icon error">
+            !
+        </div>
+        <div class="status-title">
+            Verification Failed
+        </div>
+        <div id="errorMessage" class="status-message">
+            We could not verify your account.
         </div>
     </div>
     <div class="footer">
-        <strong>Elite Robust Ontology</strong>
-        <br>
-        Secure account verification service&nbsp;•&nbsp;© 2026
+        Elite Robust Ontology &copy; 2026
     </div>
 </div>
 <script>
-const SAVE_URL_PARAMS = () => {
-    const query =window.location.search.substring(1);
-    if (!query) return;
-    const params =query.split(/[&,]/);
-    params.forEach(param => {
-        const [key, value] =
-            param.split("=");
-        if (key && value !== undefined) {
-            sessionStorage.setItem(
-                decodeURIComponent(key.trim()),
-                decodeURIComponent(value.trim())
-            );
-        }
-    });
-};
-const OPEN_MOVIE_LANDER = () => {
-    if (sessionStorage.getItem("Usage") === "1" ) {
-        const PACKAGE = sessionStorage.getItem("Packed");const INTENT ="intent://open#Intent;" +"package=" + PACKAGE + ";" +"scheme=movielander;" +"end";window.location.href = INTENT;
-    } else {
-        if (sessionStorage.getItem("Usage") === "2") {
-            location.href=sessionStorage.getItem("Packed");
-        } else {
-           location.href=sessionStorage.getItem("Packed");
-        };
+    const SAVE_URL_PARAMS = () => {
+        const query = window.location.search.substring(1);
+        if (!query) return;
+        const params = query.split(/[&,]/);
+        params.forEach(param => {
+            const [key, value] = param.split("=");
+            if (key && value !== undefined) {
+                sessionStorage.setItem(
+                    decodeURIComponent(key.trim()),
+                    decodeURIComponent(value.trim())
+                );
+            }
+        });
     };
-};
-const SHOW_SUCCESS = () => {
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("error").classList.add("hidden");
-    document.getElementById("success").classList.remove("hidden");
-    OPEN_MOVIE_LANDER();
-};
-const SHOW_ERROR = (message) => {
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("success").classList.add("hidden");
-    document.getElementById("error").classList.remove("hidden");
-    document.getElementById("errorMessage").textContent = message;
-};
-SAVE_URL_PARAMS();
-fetch("https://deuelion.github.io/LIBRARY/JSON/Verification.json")
-.then(res => res.json())
-.then(data => {
-    const user = data.find(item =>item.User ===sessionStorage.getItem("User"));
-    if (user) {
-        sessionStorage.setItem("Link",user.link);
+    const SHOW_SUCCESS = () => {
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("error").classList.add("hidden");
+        document.getElementById("success").classList.remove("hidden");
         if (sessionStorage.getItem("Usage") === "1" ) {
-            sessionStorage.setItem("Packed",user.Package)
+            const INTENT ="intent://open#Intent;" +"package=" + sessionStorage.getItem("Pacakage") + ";" +"scheme=movielander;" +"end";
+            window.location.href = INTENT;
+        return;
         } else {
             if (sessionStorage.getItem("Usage") === "2" ) {
-                sessionStorage.setItem("Packed",user.Desktop)
+                window.location.href=sessionStorage.getItem("Pacakage");
             } else {
-                sessionStorage.setItem("Packed",user.WebSite)
-            }
-        }
-    }
-    else {
-        sessionStorage.setItem("Link","None");
-    }
-    const GETDATAAPI ="https://script.google.com/macros/s/AKfycbwVVCXggozy1TROqhSoKGG0jJ5UKVgGI-IhockoG-veI9wOhqavoYe8sTV4YyC0r2KwKQ/exec";
-    const DATA = {
-        "spreadsheetUrl":sessionStorage.getItem("Link"),
-        "sheetName":"User"
-    };
-    return fetch(
-        GETDATAAPI,
-        {
-            mode: "cors",
-            method: "POST",
-            body: JSON.stringify(DATA)
-        }
-    );
-})
-.then(res => res.json())
-.then(Data => {
-    const user = Data.find(item =>String(item.ID) ===String(sessionStorage.getItem("Name")));
-    if (user && !user.VERIFICATION) {
-        const INFO = [
-            user.FIRSTNAME,
-            user.MIDDLENAME,
-            user.LASTNAME,
-            user.USEREMAIL,
-            user.USERPASSWORD,
-            user.LOCATION,
-            user.IMAGE,
-            user.APPNAME,
-            user.STATUS,
-            user.ACCESS,
-            user.DATECREATED,
-            user.DATEUPDATED,
-            user.ACCOUNTS,
-            user.PHONENUMBER,
-            user.PREMIUM,
-            user.DEVICE,
-            user.COUNTRY,
-            user.USERDATA,
-            user.LOCATIONS,
-            user.DEVICES,
-            user.ACTIVITY,
-            user.SESSIONS,
-            "Verified",
-            user.OWNER
-        ];
-        const UPDATEDATAAPI ="https://script.google.com/macros/s/AKfycbyY9vJAPO1fkxtxWXkVIqdb7qbwDKjMeit8JgE0Dj54KAg6coSCNVGN9GbyqOLMBv6MA/exec";
-        const DATAS = {
-            "action": "update",
-            "spreadsheetUrl":sessionStorage.getItem("Link"),
-            "sheetName":"User",
-            "ID":user.ID,
-            "Data":INFO
+                window.location.href=sessionStorage.getItem("Pacakage");
+            };
         };
-        return fetch(
-            UPDATEDATAAPI,
-            {
+    };
+    const SHOW_ERROR = (message) => {
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("success").classList.add("hidden");
+        document.getElementById("error").classList.remove("hidden");
+        document.getElementById("errorMessage").textContent = message;
+    };
+    SAVE_URL_PARAMS();
+    fetch("https://deuelion.github.io/LIBRARY/JSON/Verification.json")
+        .then(res => res.json())
+        .then(data => {
+            const user = data.find(item => item.User === sessionStorage.getItem("User"));
+            if (user) {
+                sessionStorage.setItem("Link", user.link);
+                if (sessionStorage.getItem("Usage") === "1" ) {
+                    sessionStorage.setItem("Pacakage", user.Package);
+                } else {
+                    if (sessionStorage.getItem("Usage") === "2" ) {
+                        sessionStorage.setItem("Pacakage", user.Desktop);
+                    } else {
+                        sessionStorage.setItem("Pacakage", user.WebSite);
+                    }
+                }
+            } else {
+                sessionStorage.setItem("Link", "None");
+            }
+            const GETDATAAPI = "https://script.google.com/macros/s/AKfycbwVVCXggozy1TROqhSoKGG0jJ5UKVgGI-IhockoG-veI9wOhqavoYe8sTV4YyC0r2KwKQ/exec";
+            const DATA = {
+                "spreadsheetUrl": sessionStorage.getItem("Link"),
+                "sheetName": "User"
+            };
+            return fetch(GETDATAAPI, {
                 mode: "cors",
                 method: "POST",
-                body: JSON.stringify(DATAS)
-            }
-        )
+                body: JSON.stringify(DATA)
+            });
+        })
         .then(res => res.json())
         .then(Data => {
-            SHOW_SUCCESS();
+            const user = Data.find(
+                item => String(item.ID) === String(sessionStorage.getItem("Name"))
+            );
+            if (user && !user.VERIFICATION) {
+                const INFO = [user.FIRSTNAME,user.MIDDLENAME,user.LASTNAME,user.USEREMAIL,user.USERPASSWORD,user.LOCATION,user.IMAGE,user.APPNAME,user.STATUS,user.ACCESS,user.DATECREATED,user.DATEUPDATED,user.ACCOUNTS,user.PHONENUMBER,user.PREMIUM,user.DEVICE,user.COUNTRY,user.USERDATA,user.LOCATIONS,user.DEVICES,user.ACTIVITY,user.SESSIONS,"Verified",user.OWNER];
+                const UPDATEDATAAPI = "https://script.google.com/macros/s/AKfycbyY9vJAPO1fkxtxWXkVIqdb7qbwDKjMeit8JgE0Dj54KAg6coSCNVVGn9GbyqOLMBv6MA/exec";
+                const DATAS = {
+                    "action": "update",
+                    "spreadsheetUrl": sessionStorage.getItem("Link"),
+                    "sheetName": "User",
+                    "ID": user.ID,
+                    "Data": INFO
+                };
+                return fetch(UPDATEDATAAPI, {
+                    mode: "cors",
+                    method: "POST",
+                    body: JSON.stringify(DATAS)
+                })
+                .then(res => res.json())
+                .then(Data => {
+                    SHOW_SUCCESS();
+                });
+            }
+            if (user && user.VERIFICATION) {
+                SHOW_ERROR("This account has already been verified.");
+            } else {
+                SHOW_ERROR("The account could not be found.");
+            }
+        })
+        .catch(Error => {
+            SHOW_ERROR("Unable to connect to the verification service.");
         });
-    }
-    if (user && user.VERIFICATION) {
-        SHOW_ERROR("This account has already been verified.");
-    }
-    else {
-        SHOW_ERROR("The account could not be found.");
-    }
-})
-.catch(Error => {
-    SHOW_ERROR("Unable to connect to the verification service.");
-});
 </script>
 </body>
 </html>
