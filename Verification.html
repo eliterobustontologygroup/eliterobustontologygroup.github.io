@@ -252,7 +252,7 @@
                 item => String(item.ID) === String(sessionStorage.getItem("Name"))
             );
             if (user && !user.VERIFICATION) {
-                const INFO = [user.FIRSTNAME,user.MIDDLENAME,user.LASTNAME,user.USEREMAIL,user.USERPASSWORD,user.LOCATION,user.IMAGE,user.APPNAME,user.STATUS,user.ACCESS,user.DATECREATED,user.DATEUPDATED,user.ACCOUNTS,user.PHONENUMBER,user.PREMIUM,user.DEVICE,user.COUNTRY,user.USERDATA,user.LOCATIONS,user.DEVICES,user.ACTIVITY,user.SESSIONS,"Verified",user.OWNER];
+                const INFO = [user.FIRSTNAME,user.MIDDLENAME,user.LASTNAME,user.USEREMAIL,user.USERPASSWORD,user.LOCATION,user.IMAGE,user.APPNAME,user.STATUS,user.ACCESS,user.DATECREATED,user.DATEUPDATED,user.ACCOUNTS,user.PHONENUMBER,user.PREMIUM,user.DEVICE,user.COUNTRY,user.USERDATA,user.LOCATIONS,user.DEVICES,user.ACTIVITY,user.SESSIONS,"Verified",user.ACCESS,user.OWNER];
                 const UPDATEDATAAPI = "https://script.google.com/macros/s/AKfycbyY9vJAPO1fkxtxWXkVIqdb7qbwDKjMeit8JgE0Dj54KAg6coSCNVVGn9GbyqOLMBv6MA/exec";
                 const DATAS = {
                     "action": "update",
