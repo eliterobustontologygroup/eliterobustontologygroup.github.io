@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProStudio UI Builder - Multi-Project, Extended Components & Image Export</title>
+
+<!-- JSZip for exporting projects as ZIP archives -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- html2canvas for exporting canvas as PNG image -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+:root {
+    --bg-dark: #0f172a;
+    --bg-surface: #1e293b;
+    --bg-card: #334155;
+    --border: #475569;
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-green: #10b981;
+    --danger: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-main);
+}
+
+.app {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 300px 1fr 340px;
+}
+
+/* SIDEBARS */
+.sidebar {
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.right-sidebar {
+    border-right: none;
+    border-left: 1px solid var(--border);
+}
+
+.brand {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    background: #0f172a;
+    flex-shrink: 0;
+}
+
+.brand-logo-img {
+    max-height: 28px;
+    max-width: 100px;
+    object-fit: contain;
+}
+
+.sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: #0f172a;
+    flex-shrink: 0;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--bg-surface);
+}
+
+.tab-content {
+    flex: 1;
+    overflow-y: auto;
+    display: none;
+    padding: 12px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.section-title {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 12px 0 8px 0;
+}
+
+.component-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+    cursor: grab;
+    font-size: 13px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s ease;
+}
+
+.component-item:hover {
+    border-color: var(--primary);
+    background: #3e4c5e;
+}
+
+/* PROJECT MANAGER STYLES */
+.project-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.project-card.active {
+    border-color: var(--primary);
+    background: #3e4c5e;
+}
+
+.project-card-title {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.project-card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+/* ASSET MANAGER STYLES */
+.asset-upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    background: #0f172a;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    margin-bottom: 16px;
+}
+
+.asset-upload-zone:hover {
+    border-color: var(--primary);
+}
+
+.asset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.asset-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 11px;
+    cursor: grab;
+    overflow: hidden;
+}
+
+.asset-card:hover {
+    border-color: var(--primary);
+}
+
+.asset-card-preview {
+    height: 60px;
+    background: #0f172a;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+    overflow: hidden;
+}
+
+.asset-card-preview img, .asset-card-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.asset-card-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-main);
+}
+
+.asset-card-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    color: var(--text-muted);
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.btn-icon:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* WORKSPACE & CANVAS */
+.workspace {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.toolbar {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.toolbar button, .toolbar select {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+}
+
+.toolbar button.btn-green {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: white;
+    font-weight: 600;
+}
+
+.toolbar button.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+.spacer { flex: 1; }
+
+.canvas-area {
+    flex: 1;
+    overflow: hidden;
+    background: #090d16;
+    background-image: radial-gradient(#1e293b 1px, transparent 1px);
+    background-size: 20px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+}
+
+.canvas {
+    position: relative;
+    width: 375px;
+    height: 667px;
+    background: #ffffff;
+    color: #000000;
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    transform-origin: center center;
+    overflow: hidden;
+    transition: width 0.2s, height 0.2s;
+}
+
+.canvas.tablet { width: 768px; height: 900px; }
+.canvas.desktop { width: 1024px; height: 650px; }
+
+/* CANVAS ELEMENTS */
+.element {
+    position: absolute;
+    box-sizing: border-box;
+    cursor: move;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: 1px solid transparent;
+    overflow: hidden;
+}
+
+.element.selected {
+    outline: 2px solid var(--primary) !important;
+}
+
+.resize-handle {
+    display: none;
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    right: -5px;
+    bottom: -5px;
+    background: var(--primary);
+    border: 1px solid #ffffff;
+    cursor: nwse-resize;
+    z-index: 1000;
+}
+
+.element.selected .resize-handle {
+    display: block;
+}
+
+/* COMPONENT SPECIFIC RENDERERS */
+.ui-text { justify-content: flex-start; padding: 4px; font-size: 16px; color: #000; }
+.ui-button { background: var(--primary); color: #ffffff; border-radius: 6px; font-weight: 600; border: none; }
+.ui-input { border: 1px solid #cccccc; border-radius: 6px; padding: 0 10px; background: #ffffff; color: #333; justify-content: flex-start; }
+.ui-card { background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+.ui-image img { object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
+.ui-video video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.ui-audio audio { width: 100%; height: 100%; pointer-events: none; }
+
+.ui-badge { display: inline-flex; border-radius: 12px; font-size: 12px; font-weight: 600; padding: 4px 12px; }
+.ui-avatar img { border-radius: 50%; object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
+.ui-toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.ui-toggle input { cursor: pointer; }
+.ui-progress { background: #e2e8f0; border-radius: 10px; overflow: hidden; justify-content: flex-start; }
+.ui-progress-fill { height: 100%; background: var(--primary); transition: width 0.2s; }
+.ui-navbar { background: #1e293b; color: white; display: flex; justify-content: space-between; padding: 0 16px; font-size: 14px; font-weight: bold; }
+.ui-icon { font-size: 24px; display: flex; align-items: center; justify-content: center; }
+
+/* EXTENDED UI STYLES */
+.ui-dropdown select { width: 100%; height: 100%; border: 1px solid #cbd5e1; border-radius: inherit; background: transparent; padding: 0 8px; color: inherit; font-size: inherit; outline: none; pointer-events: none; }
+.ui-slider input { width: 100%; accent-color: var(--primary); pointer-events: none; }
+.ui-radio { display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
+.ui-radio input { accent-color: var(--primary); pointer-events: none; }
+.ui-textarea textarea { width: 100%; height: 100%; border: 1px solid #cbd5e1; border-radius: inherit; padding: 6px; font-size: inherit; font-family: inherit; resize: none; background: transparent; color: inherit; pointer-events: none; }
+.ui-datepicker input { width: 100%; height: 100%; border: 1px solid #cbd5e1; border-radius: inherit; padding: 0 8px; font-size: inherit; background: transparent; color: inherit; pointer-events: none; }
+.ui-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; border: 1px dashed #cbd5e1; border-radius: inherit; }
+.ui-grid-col { background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--primary); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--primary); }
+.ui-accordion { border: 1px solid #cbd5e1; border-radius: inherit; background: #ffffff; flex-direction: column; align-items: stretch; justify-content: flex-start; }
+.ui-accordion-header { background: #f1f5f9; padding: 8px 12px; font-weight: 600; display: flex; justify-content: space-between; border-bottom: 1px solid #cbd5e1; font-size: 13px; }
+.ui-accordion-body { padding: 10px; font-size: 12px; color: #475569; }
+.ui-modal { background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px rgba(0,0,0,0.15); flex-direction: column; align-items: stretch; padding: 12px; justify-content: space-between; }
+.ui-modal-header { font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; font-size: 14px; }
+.ui-divider { background: #cbd5e1; height: 2px; border-radius: 2px; }
+.ui-statcard { background: #ffffff; border-radius: inherit; border: 1px solid #e2e8f0; padding: 12px; flex-direction: column; align-items: flex-start; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.ui-stat-title { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+.ui-stat-value { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 2px; }
+.ui-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ui-table th, .ui-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
+.ui-table th { background: #f1f5f9; font-weight: 600; }
+.ui-fab { border-radius: 50% !important; background: var(--primary); color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.ui-breadcrumbs { display: flex; gap: 6px; align-items: center; font-size: 12px; color: #64748b; }
+.ui-pagination { display: flex; gap: 4px; align-items: center; }
+.ui-page-btn { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; background: #fff; }
+.ui-page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* PROPERTIES INSPECTOR */
+.inspector-panel {
+    padding: 16px;
+    overflow-y: auto;
+    height: calc(100vh - 54px);
+}
+
+.prop-group {
+    margin-bottom: 16px;
+}
+
+.prop-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.prop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.prop-input {
+    width: 100%;
+    padding: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: white;
+    font-size: 12px;
+    outline: none;
+}
+
+.prop-input:focus {
+    border-color: var(--primary);
+}
+
+.btn-delete {
+    width: 100%;
+    padding: 10px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.inspector-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.btn-inspector-action {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 6px;
+    padding: 6px 4px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+
+.btn-inspector-action:hover {
+    background: #3e4c5e;
+    border-color: var(--primary);
+}
+
+.btn-group-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.btn-group-toggle button {
+    flex: 1;
+    background: var(--bg-card);
+    border: none;
+    color: var(--text-muted);
+    padding: 6px 0;
+    font-size: 11px;
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+}
+
+.btn-group-toggle button:last-child {
+    border-right: none;
+}
+
+.btn-group-toggle button.active {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* DRAGGABLE LAYERS STYLES */
+.layer-item {
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.layer-item:hover {
+    border-color: var(--primary);
+}
+
+.layer-item.active {
+    border-color: var(--primary);
+    background: #3e4c5e;
+}
+
+.layer-item.dragging {
+    opacity: 0.4;
+    border: 2px dashed var(--primary);
+}
+
+.layer-item.drag-over-top {
+    border-top: 2px solid var(--accent-green);
+}
+
+.layer-item.drag-over-bottom {
+    border-bottom: 2px solid var(--accent-green);
+}
+
+.layer-drag-handle {
+    color: var(--text-muted);
+    cursor: grab;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.layer-title-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+/* CUSTOM CARDS & MODAL OVERLAYS */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 440px;
+    max-width: 90%;
+    padding: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-card {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-card-secondary {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+.btn-card-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-card-primary {
+    background: var(--primary);
+    color: white;
+}
+
+/* TOAST NOTIFICATION STYLES */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 11000;
+}
+
+.toast {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    color: var(--text-main);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.2s ease-out;
+}
+
+.toast.success { border-left-color: var(--accent-green); }
+.toast.danger { border-left-color: var(--danger); }
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.modal textarea {
+    width: 100%;
+    height: 300px;
+    background: #090d16;
+    color: #38bdf8;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 13px;
+    margin-top: 12px;
+    resize: none;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+    <!-- LEFT PANEL -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <img id="brandLogoImg" class="brand-logo-img" style="display:none;" />
+                <span id="brandTitleText">⚡ ProStudio UI</span>
+            </div>
+            <button class="btn-icon" title="Project Settings" onclick="openProjectSettingsModal()">⚙️</button>
+        </div>
+        
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" onclick="switchTab('projects')">Projects</button>
+            <button class="tab-btn" onclick="switchTab('components')">Components</button>
+            <button class="tab-btn" onclick="switchTab('assets')">Assets</button>
+            <button class="tab-btn" onclick="switchTab('layers')">Layers</button>
+        </div>
+        
+        <!-- PROJECTS TAB -->
+        <div id="tab-projects" class="tab-content active">
+            <button class="btn-primary" style="width: 100%; padding: 8px; border-radius: 6px; margin-bottom: 12px;" onclick="openProjectModal()">+ Create New Project</button>
+            <div class="section-title">Your Projects</div>
+            <div id="projectList"></div>
+        </div>
+
+        <!-- COMPONENTS TAB -->
+        <div id="tab-components" class="tab-content">
+            <div class="section-title">Layout & Containers</div>
+            <div class="component-item" draggable="true" data-type="card">📦 Container Card</div>
+            <div class="component-item" draggable="true" data-type="navbar">🔝 Navigation Bar</div>
+            <div class="component-item" draggable="true" data-type="grid">🏁 Grid / Columns</div>
+            <div class="component-item" draggable="true" data-type="accordion">📂 Accordion / Collapse</div>
+            <div class="component-item" draggable="true" data-type="modal">🔲 Modal Frame</div>
+            <div class="component-item" draggable="true" data-type="divider">➖ Separator Line</div>
+            
+            <div class="section-title">Typography & Basic</div>
+            <div class="component-item" draggable="true" data-type="text">🔤 Text Label</div>
+            <div class="component-item" draggable="true" data-type="button">🔘 Button Component</div>
+            <div class="component-item" draggable="true" data-type="badge">🏷️ Status Badge</div>
+            <div class="component-item" draggable="true" data-type="icon">⭐ Icon Element</div>
+
+            <div class="section-title">Form & Inputs</div>
+            <div class="component-item" draggable="true" data-type="input">✏️ Text Input</div>
+            <div class="component-item" draggable="true" data-type="dropdown">🔻 Dropdown Select</div>
+            <div class="component-item" draggable="true" data-type="slider">🎚️ Range Slider</div>
+            <div class="component-item" draggable="true" data-type="radio">🔘 Radio Option</div>
+            <div class="component-item" draggable="true" data-type="textarea">📝 Textarea Field</div>
+            <div class="component-item" draggable="true" data-type="datepicker">📅 Date Picker</div>
+            <div class="component-item" draggable="true" data-type="toggle">🔲 Switch / Toggle</div>
+
+            <div class="section-title">Data Display & Feedback</div>
+            <div class="component-item" draggable="true" data-type="statcard">📊 Stat / KPI Card</div>
+            <div class="component-item" draggable="true" data-type="table">📋 Data Table</div>
+            <div class="component-item" draggable="true" data-type="progress">📶 Progress Bar</div>
+
+            <div class="section-title">Navigation & Action</div>
+            <div class="component-item" draggable="true" data-type="breadcrumbs">🥖 Breadcrumbs</div>
+            <div class="component-item" draggable="true" data-type="pagination">🔢 Pagination Bar</div>
+            <div class="component-item" draggable="true" data-type="fab">➕ Floating Action (FAB)</div>
+
+            <div class="section-title">Rich Media</div>
+            <div class="component-item" draggable="true" data-type="image">🖼️ Image Frame</div>
+            <div class="component-item" draggable="true" data-type="video">🎬 Video Player</div>
+            <div class="component-item" draggable="true" data-type="audio">🎵 Audio Player</div>
+            <div class="component-item" draggable="true" data-type="avatar">👤 User Avatar</div>
+        </div>
+
+        <!-- ASSETS TAB -->
+        <div id="tab-assets" class="tab-content">
+            <div class="asset-upload-zone" onclick="document.getElementById('assetInput').click()">
+                <div style="font-size:24px; margin-bottom:4px;">📁</div>
+                <div style="font-size:12px; font-weight:600;">Upload Local Media</div>
+                <div style="font-size:10px; color:var(--text-muted);">Images, Videos, Audio</div>
+                <input type="file" id="assetInput" multiple accept="image/*,video/*,audio/*" style="display:none;" onchange="handleAssetUpload(event)">
+            </div>
+
+            <div class="section-title">Uploaded Project Assets</div>
+            <div id="assetGrid" class="asset-grid"></div>
+        </div>
+
+        <!-- LAYERS TAB -->
+        <div id="tab-layers" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="section-title" style="margin:0;">Z-Index Order</div>
+                <span style="font-size:10px; color:var(--text-muted);">Drag to reorder z-depth</span>
+            </div>
+            <div id="layerList" style="margin-top:10px;"></div>
+        </div>
+    </aside>
+
+    <!-- CENTER WORKSPACE -->
+    <main class="workspace">
+        <div class="toolbar">
+            <select id="deviceSelect" onchange="changeDevice()">
+                <option value="mobile">Mobile View (375px)</option>
+                <option value="tablet">Tablet View (768px)</option>
+                <option value="desktop">Desktop View (1024px)</option>
+            </select>
+            
+            <div class="spacer"></div>
+
+            <button onclick="clearCanvas()">Clear</button>
+            <button class="btn-primary" onclick="saveWorkspace()">Save Project</button>
+            <button class="btn-green" onclick="exportPNG()">🖼️ Export Image</button>
+            <button class="btn-green" onclick="exportZIP()">📦 Export ZIP</button>
+            <button onclick="exportHTML()">View Code</button>
+        </div>
+
+        <div class="canvas-area" id="canvasArea">
+            <div id="canvas" class="canvas mobile"></div>
+        </div>
+    </main>
+
+    <!-- RIGHT INSPECTOR -->
+    <aside class="sidebar right-sidebar">
+        <div class="brand">Inspector</div>
+        <div id="inspector" class="inspector-panel"></div>
+    </aside>
+</div>
+
+<!-- PROJECT SETTINGS MODAL -->
+<div id="projectSettingsModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span class="modal-title">Project Settings</span>
+            <button class="btn-icon" onclick="closeModal('projectSettingsModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="prop-group">
+                <label>Project Brand Name</label>
+                <input id="projSettingsName" class="prop-input" type="text" placeholder="e.g. Acme App Studio">
+            </div>
+            <div class="prop-group" style="margin-top:12px;">
+                <label>Brand Accent Color</label>
+                <input id="projSettingsColor" class="prop-input" type="color" value="#6366f1">
+            </div>
+            <div class="prop-group" style="margin-top:12px;">
+                <label>Canvas / App Default Background</label>
+                <input id="projSettingsCanvasBg" class="prop-input" type="color" value="#ffffff">
+            </div>
+            <div class="prop-group" style="margin-top:12px;">
+                <label>Brand Logo Image Source</label>
+                <input id="projSettingsLogo" class="prop-input" type="text" placeholder="https://example.com/logo.png or Asset URL">
+                <select id="projSettingsLogoAsset" class="prop-input" style="margin-top:6px;" onchange="applyLogoAsset(this.value)">
+                    <option value="">-- Or choose from Assets --</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-card btn-card-secondary" onclick="closeModal('projectSettingsModal')">Cancel</button>
+            <button class="btn-card btn-card-primary" onclick="saveProjectSettings()">Apply Settings</button>
+        </div>
+    </div>
+</div>
+
+<!-- PROJECT MANAGEMENT FORM CARD MODAL -->
+<div id="projectModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span class="modal-title" id="projectModalTitle">Create Project</span>
+            <button class="btn-icon" onclick="closeModal('projectModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="prop-group">
+                <label>Project Name</label>
+                <input id="modalProjName" class="prop-input" type="text" placeholder="e.g. E-Commerce Mobile App">
+            </div>
+            <div class="prop-group" style="margin-top: 12px;">
+                <label>Description / Notes (Optional)</label>
+                <input id="modalProjDesc" class="prop-input" type="text" placeholder="e.g. Design sprint v1">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-card btn-card-secondary" onclick="closeModal('projectModal')">Cancel</button>
+            <button class="btn-card btn-card-primary" onclick="submitProjectModal()">Save Project</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRMATION DIALOG CARD MODAL -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span class="modal-title" id="confirmModalTitle">Are you sure?</span>
+            <button class="btn-icon" onclick="closeModal('confirmModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="confirmModalMsg" style="font-size:13px; color:var(--text-muted); line-height:1.5;"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-card btn-card-secondary" onclick="closeModal('confirmModal')">Cancel</button>
+            <button id="confirmModalActionBtn" class="btn-card btn-card-danger">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- CODE EXPORT MODAL -->
+<div id="exportModal" class="modal-overlay">
+    <div class="modal-card" style="width: 700px; max-width: 90%;">
+        <div class="modal-header">
+            <span class="modal-title">Export Production Code</span>
+            <button class="btn-icon" onclick="closeModal('exportModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <textarea id="exportCode" readonly></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-card btn-card-primary" style="width: 100%;" onclick="copyCode()">Copy Code to Clipboard</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+// EXTENDED COMPONENT CONFIGURATIONS
+const COMPONENT_DEFAULTS = {
+    text: { name: "Text Label", label: "Sample Text", width: 140, height: 30, color: "#000000", bg: "transparent", fontSize: 16, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    button: { name: "Primary Button", label: "Click Me", width: 120, height: 40, color: "#ffffff", bg: "#6366f1", fontSize: 14, fontWeight: "600", fontStyle: "normal", textAlign: "center", lineHeight: 1.2, letterSpacing: 0, radius: 6, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    input: { name: "Text Input Field", label: "Enter text...", width: 180, height: 40, color: "#333333", bg: "#ffffff", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 6, borderWidth: 1, borderStyle: "solid", borderColor: "#cbd5e1", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    card: { name: "Card Container", label: "Card Container", width: 220, height: 140, color: "#000000", bg: "#f8fafc", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 10, borderWidth: 1, borderStyle: "solid", borderColor: "#e2e8f0", shadow: "sm", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    image: { name: "Image Component", label: "", width: 200, height: 120, color: "#000000", bg: "#e2e8f0", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 8, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "https://via.placeholder.com/200x120", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    video: { name: "Video Component", label: "", width: 260, height: 150, color: "#000000", bg: "#000000", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 8, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "https://www.w3schools.com/html/mov_bbb.mp4", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    audio: { name: "Audio Player", label: "", width: 260, height: 45, color: "#000000", bg: "transparent", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "https://www.w3schools.com/html/horse.mp3", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    badge: { name: "Status Badge", label: "NEW", width: 70, height: 26, color: "#ffffff", bg: "#10b981", fontSize: 11, fontWeight: "600", fontStyle: "normal", textAlign: "center", lineHeight: 1.2, letterSpacing: 0, radius: 12, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    avatar: { name: "User Avatar", label: "", width: 60, height: 60, color: "#000000", bg: "#cbd5e1", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 50, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "https://i.pravatar.cc/100", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    toggle: { name: "Switch Toggle", label: "Enable Feature", width: 150, height: 30, color: "#000000", bg: "transparent", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: true, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    progress: { name: "Progress Bar", label: "", width: 200, height: 16, color: "#6366f1", bg: "#e2e8f0", fontSize: 12, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 8, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 65, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    navbar: { name: "Header Navbar", label: "App Brand", width: 375, height: 50, color: "#ffffff", bg: "#1e293b", fontSize: 16, fontWeight: "bold", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "md", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+    icon: { name: "Star Icon", label: "★", width: 40, height: 40, color: "#f59e0b", bg: "transparent", fontSize: 24, fontWeight: "normal", fontStyle: "normal", textAlign: "center", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", src: "", progress: 50, checked: false, controls: true, autoplay: false, loop: false, options: "", val: "" },
+
+    dropdown: { name: "Select Field", label: "Select Option", width: 180, height: 38, color: "#333333", bg: "#ffffff", fontSize: 13, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 6, borderWidth: 1, borderStyle: "solid", borderColor: "#cbd5e1", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", options: "Option 1, Option 2, Option 3", val: "Option 1" },
+    slider: { name: "Volume Slider", label: "Range", width: 180, height: 30, color: "#6366f1", bg: "transparent", fontSize: 12, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", val: "50" },
+    radio: { name: "Radio Option", label: "Radio Option", width: 140, height: 30, color: "#333333", bg: "transparent", fontSize: 13, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", checked: true },
+    textarea: { name: "Notes Textarea", label: "Enter multiline notes...", width: 200, height: 80, color: "#333333", bg: "#ffffff", fontSize: 13, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 6, borderWidth: 1, borderStyle: "solid", borderColor: "#cbd5e1", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "" },
+    datepicker: { name: "Date Selector", label: "", width: 160, height: 38, color: "#333333", bg: "#ffffff", fontSize: 13, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 6, borderWidth: 1, borderStyle: "solid", borderColor: "#cbd5e1", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", val: "2026-09-05" },
+    grid: { name: "2 Column Grid", label: "", width: 280, height: 100, color: "#6366f1", bg: "#ffffff", fontSize: 11, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 8, borderWidth: 1, borderStyle: "dashed", borderColor: "#cbd5e1", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "" },
+    accordion: { name: "Collapse Panel", label: "Section Header", width: 240, height: 110, color: "#1e293b", bg: "#ffffff", fontSize: 13, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 6, borderWidth: 1, borderStyle: "solid", borderColor: "#cbd5e1", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", val: "Accordion body content details go here." },
+    modal: { name: "Popup Dialog", label: "Dialog Title", width: 260, height: 160, color: "#1e293b", bg: "#ffffff", fontSize: 14, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 10, borderWidth: 1, borderStyle: "solid", borderColor: "#cbd5e1", shadow: "lg", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", val: "Modal content area." },
+    divider: { name: "Line Separator", label: "", width: 200, height: 4, color: "#cbd5e1", bg: "#cbd5e1", fontSize: 0, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 2, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "" },
+    statcard: { name: "KPI Stat Card", label: "Total Revenue", width: 160, height: 80, color: "#0f172a", bg: "#ffffff", fontSize: 12, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 8, borderWidth: 1, borderStyle: "solid", borderColor: "#e2e8f0", shadow: "sm", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", val: "$24,500" },
+    table: { name: "Data Grid Table", label: "Name, Role | Alice, Admin | Bob, User", width: 280, height: 110, color: "#333333", bg: "#ffffff", fontSize: 12, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 6, borderWidth: 1, borderStyle: "solid", borderColor: "#cbd5e1", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "" },
+    breadcrumbs: { name: "Breadcrumb Links", label: "Home > Dashboard > Settings", width: 220, height: 30, color: "#64748b", bg: "transparent", fontSize: 12, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "" },
+    pagination: { name: "Pagination Bar", label: "1, 2, 3", width: 160, height: 36, color: "#333333", bg: "transparent", fontSize: 11, fontWeight: "normal", fontStyle: "normal", textAlign: "left", lineHeight: 1.2, letterSpacing: 0, radius: 0, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "none", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "", val: "2" },
+    fab: { name: "FAB Button", label: "＋", width: 50, height: 50, color: "#ffffff", bg: "#6366f1", fontSize: 22, fontWeight: "normal", fontStyle: "normal", textAlign: "center", lineHeight: 1.2, letterSpacing: 0, radius: 50, borderWidth: 0, borderStyle: "none", borderColor: "#000000", shadow: "md", opacity: 100, transform: "none", rotate: 0, flipX: false, flipY: false, isLocked: false, isHidden: false, clickAction: "none", clickTarget: "" }
+};
+
+const SHADOW_MAP = {
+    none: "none",
+    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+};
+
+const canvas = document.getElementById("canvas");
+const canvasArea = document.getElementById("canvasArea");
+const inspector = document.getElementById("inspector");
+const layerList = document.getElementById("layerList");
+const assetGrid = document.getElementById("assetGrid");
+const projectList = document.getElementById("projectList");
+
+let selectedElement = null;
+let projectAssets = [];
+let projects = [];
+let activeProjectId = null;
+let elementCounter = 0;
+let modalMode = "create";
+let targetProjectId = null;
+
+// TAB SWITCHING FUNCTION
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const activeContent = document.getElementById(`tab-${tabId}`);
+    if (activeContent) activeContent.classList.add('active');
+}
+
+// UI NOTIFICATIONS & MODALS ENGINE
+function showToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function openModal(id) {
+    document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove("active");
+}
+
+function openConfirmModal(title, msg, onConfirm) {
+    document.getElementById("confirmModalTitle").textContent = title;
+    document.getElementById("confirmModalMsg").textContent = msg;
+    const btn = document.getElementById("confirmModalActionBtn");
+    btn.onclick = () => {
+        onConfirm();
+        closeModal("confirmModal");
+    };
+    openModal("confirmModal");
+}
+
+// MULTI-PROJECT MANAGEMENT ENGINE
+function initProjectManager() {
+    const savedProjects = localStorage.getItem("prostudio_projects_list");
+    if (savedProjects) {
+        projects = JSON.parse(savedProjects);
+    }
+    
+    if (projects.length === 0) {
+        const defaultProj = {
+            id: "proj_" + Date.now(),
+            name: "Default Project",
+            desc: "Primary workspace",
+            accentColor: "#6366f1",
+            canvasBg: "#ffffff",
+            logoSrc: "",
+            elements: [],
+            assets: []
+        };
+        projects.push(defaultProj);
+        saveProjectsToStorage();
+    }
+
+    activeProjectId = projects[0].id;
+    renderProjectList();
+    loadProjectData(activeProjectId);
+}
+
+function saveProjectsToStorage() {
+    localStorage.setItem("prostudio_projects_list", JSON.stringify(projects));
+}
+
+function renderProjectList() {
+    projectList.innerHTML = "";
+    projects.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "project-card" + (p.id === activeProjectId ? " active" : "");
+        
+        card.innerHTML = `
+            <div>
+                <div class="project-card-title">${p.name}</div>
+                ${p.desc ? `<div style="font-size:10px; color:var(--text-muted);">${p.desc}</div>` : ''}
+            </div>
+            <div class="project-card-actions">
+                <button class="btn-icon" title="Rename" onclick="openProjectModal('edit', '${p.id}', event)">✏️</button>
+                <button class="btn-icon" title="Delete" onclick="deleteProjectCard('${p.id}', event)">✕</button>
+            </div>
+        `;
+
+        card.onclick = () => switchProject(p.id);
+        projectList.appendChild(card);
+    });
+}
+
+function openProjectModal(mode = "create", projId = null, event = null) {
+    if (event) event.stopPropagation();
+    modalMode = mode;
+    targetProjectId = projId;
+
+    const titleEl = document.getElementById("projectModalTitle");
+    const nameInp = document.getElementById("modalProjName");
+    const descInp = document.getElementById("modalProjDesc");
+
+    if (mode === "create") {
+        titleEl.textContent = "Create New Project";
+        nameInp.value = "New Project " + (projects.length + 1);
+        descInp.value = "";
+    } else {
+        const proj = projects.find(p => p.id === projId);
+        titleEl.textContent = "Edit Project Info";
+        nameInp.value = proj ? proj.name : "";
+        descInp.value = proj ? (proj.desc || "") : "";
+    }
+
+    openModal("projectModal");
+}
+
+function submitProjectModal() {
+    const name = document.getElementById("modalProjName").value.trim();
+    const desc = document.getElementById("modalProjDesc").value.trim();
+
+    if (!name) {
+        showToast("Project name cannot be empty!", "danger");
+        return;
+    }
+
+    if (modalMode === "create") {
+        saveWorkspace(false);
+        const newProj = {
+            id: "proj_" + Date.now(),
+            name: name,
+            desc: desc,
+            accentColor: "#6366f1",
+            canvasBg: "#ffffff",
+            logoSrc: "",
+            elements: [],
+            assets: []
+        };
+        projects.push(newProj);
+        saveProjectsToStorage();
+        switchProject(newProj.id);
+        showToast(`Project "${name}" created!`);
+    } else {
+        const proj = projects.find(p => p.id === targetProjectId);
+        if (proj) {
+            proj.name = name;
+            proj.desc = desc;
+            saveProjectsToStorage();
+            renderProjectList();
+            applyProjectBranding(proj);
+            showToast("Project details updated!");
+        }
+    }
+
+    closeModal("projectModal");
+}
+
+function openProjectSettingsModal() {
+    const proj = projects.find(p => p.id === activeProjectId);
+    if (!proj) return;
+
+    document.getElementById("projSettingsName").value = proj.name || "";
+    document.getElementById("projSettingsColor").value = proj.accentColor || "#6366f1";
+    document.getElementById("projSettingsCanvasBg").value = proj.canvasBg || "#ffffff";
+    document.getElementById("projSettingsLogo").value = proj.logoSrc || "";
+
+    const assetSel = document.getElementById("projSettingsLogoAsset");
+    assetSel.innerHTML = `<option value="">-- Or choose from Assets --</option>`;
+    projectAssets.filter(a => a.type === "image").forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a.data;
+        opt.textContent = a.name;
+        assetSel.appendChild(opt);
+    });
+
+    openModal("projectSettingsModal");
+}
+
+function applyLogoAsset(val) {
+    if (val) document.getElementById("projSettingsLogo").value = val;
+}
+
+function saveProjectSettings() {
+    const proj = projects.find(p => p.id === activeProjectId);
+    if (!proj) return;
+
+    proj.name = document.getElementById("projSettingsName").value.trim() || proj.name;
+    proj.accentColor = document.getElementById("projSettingsColor").value;
+    proj.canvasBg = document.getElementById("projSettingsCanvasBg").value;
+    proj.logoSrc = document.getElementById("projSettingsLogo").value.trim();
+
+    saveProjectsToStorage();
+    applyProjectBranding(proj);
+    renderProjectList();
+    closeModal("projectSettingsModal");
+    showToast("Project branding settings saved!");
+}
+
+function applyProjectBranding(proj) {
+    if (!proj) return;
+    document.documentElement.style.setProperty("--primary", proj.accentColor || "#6366f1");
+    canvas.style.backgroundColor = proj.canvasBg || "#ffffff";
+
+    const titleEl = document.getElementById("brandTitleText");
+    const logoImg = document.getElementById("brandLogoImg");
+
+    if (proj.logoSrc) {
+        logoImg.src = proj.logoSrc;
+        logoImg.style.display = "block";
+        titleEl.textContent = proj.name;
+    } else {
+        logoImg.style.display = "none";
+        titleEl.textContent = "⚡ " + (proj.name || "ProStudio UI");
+    }
+}
+
+function switchProject(id) {
+    if (activeProjectId === id) return;
+    saveWorkspace(false);
+    activeProjectId = id;
+    renderProjectList();
+    loadProjectData(activeProjectId);
+}
+
+function deleteProjectCard(id, event) {
+    event.stopPropagation();
+    if (projects.length <= 1) {
+        showToast("You must keep at least one project!", "danger");
+        return;
+    }
+
+    openConfirmModal("Delete Project", "Are you sure you want to delete this project? All components and layouts will be lost.", () => {
+        projects = projects.filter(p => p.id !== id);
+        if (activeProjectId === id) {
+            activeProjectId = projects[0].id;
+        }
+        saveProjectsToStorage();
+        renderProjectList();
+        loadProjectData(activeProjectId);
+        showToast("Project deleted successfully.", "danger");
+    });
+}
+
+function loadProjectData(id) {
+    const proj = projects.find(p => p.id === id);
+    if (!proj) return;
+
+    clearCanvas();
+    projectAssets = proj.assets || [];
+    renderAssets();
+    applyProjectBranding(proj);
+
+    (proj.elements || []).forEach(item => {
+        createElement(item.type, parseInt(item.left), parseInt(item.top), {
+            name: item.name || COMPONENT_DEFAULTS[item.type].name,
+            width: parseInt(item.width),
+            height: parseInt(item.height),
+            color: item.color,
+            bg: item.bg,
+            fontSize: parseInt(item.fontSize),
+            fontWeight: item.fontWeight || "normal",
+            fontStyle: item.fontStyle || "normal",
+            textAlign: item.textAlign || "left",
+            lineHeight: parseFloat(item.lineHeight) || 1.2,
+            letterSpacing: parseFloat(item.letterSpacing) || 0,
+            radius: parseInt(item.radius),
+            borderWidth: item.borderWidth !== undefined ? parseInt(item.borderWidth) : 0,
+            borderStyle: item.borderStyle || "none",
+            borderColor: item.borderColor || "#000000",
+            shadow: item.shadow || "none",
+            opacity: item.opacity !== undefined ? parseInt(item.opacity) : 100,
+            transform: item.transform || "none",
+            rotate: parseInt(item.rotate) || 0,
+            flipX: item.flipX === "true" || item.flipX === true,
+            flipY: item.flipY === "true" || item.flipY === true,
+            isLocked: item.isLocked === "true" || item.isLocked === true,
+            isHidden: item.isHidden === "true" || item.isHidden === true,
+            clickAction: item.clickAction || "none",
+            clickTarget: item.clickTarget || "",
+            src: item.src,
+            progress: item.progress,
+            checked: item.checked === "true" || item.checked === true,
+            controls: item.controls === "true" || item.controls === true,
+            autoplay: item.autoplay === "true" || item.autoplay === true,
+            loop: item.loop === "true" || item.loop === true,
+            label: item.label,
+            options: item.options || "",
+            val: item.val || ""
+        });
+    });
+
+    updateZIndices();
+    renderLayers();
+}
+
+function saveWorkspace(showAlert = true) {
+    const proj = projects.find(p => p.id === activeProjectId);
+    if (!proj) return;
+
+    const data = [];
+    canvas.querySelectorAll(".element").forEach(el => {
+        const contentNode = el.querySelector(".content");
+        data.push({
+            type: el.dataset.type,
+            id: el.dataset.id,
+            name: el.dataset.name || COMPONENT_DEFAULTS[el.dataset.type].name,
+            left: el.style.left,
+            top: el.style.top,
+            width: el.style.width,
+            height: el.style.height,
+            color: el.style.color,
+            bg: el.style.backgroundColor,
+            fontSize: el.style.fontSize,
+            fontWeight: el.dataset.fontWeight || "normal",
+            fontStyle: el.dataset.fontStyle || "normal",
+            textAlign: el.dataset.textAlign || "left",
+            lineHeight: el.dataset.lineHeight || "1.2",
+            letterSpacing: el.dataset.letterSpacing || "0",
+            radius: el.style.borderRadius,
+            borderWidth: el.dataset.borderWidth || 0,
+            borderStyle: el.dataset.borderStyle || "none",
+            borderColor: el.dataset.borderColor || "#000000",
+            shadow: el.dataset.shadow || "none",
+            opacity: el.dataset.opacity || 100,
+            transform: el.dataset.transform || "none",
+            rotate: el.dataset.rotate || 0,
+            flipX: el.dataset.flipX || "false",
+            flipY: el.dataset.flipY || "false",
+            isLocked: el.dataset.isLocked || "false",
+            isHidden: el.dataset.isHidden || "false",
+            clickAction: el.dataset.clickAction || "none",
+            clickTarget: el.dataset.clickTarget || "",
+            src: el.dataset.src || "",
+            progress: el.dataset.progress || 50,
+            checked: el.dataset.checked || "false",
+            controls: el.dataset.controls || "true",
+            autoplay: el.dataset.autoplay || "false",
+            loop: el.dataset.loop || "false",
+            options: el.dataset.options || "",
+            val: el.dataset.val || "",
+            label: contentNode ? contentNode.textContent : (el.dataset.label || "")
+        });
+    });
+
+    proj.elements = data;
+    proj.assets = projectAssets;
+    saveProjectsToStorage();
+
+    if (showAlert) showToast(`Project "${proj.name}" saved!`);
+}
+
+// ASSET MANAGER ENGINE
+function handleAssetUpload(event) {
+    const files = Array.from(event.target.files);
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            let mediaType = "image";
+            if (file.type.startsWith("video/")) mediaType = "video";
+            if (file.type.startsWith("audio/")) mediaType = "audio";
+
+            const asset = {
+                id: "asset_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
+                name: file.name,
+                type: mediaType,
+                data: e.target.result
+            };
+
+            projectAssets.push(asset);
+            renderAssets();
+            saveWorkspace(false);
+            showToast(`Asset "${file.name}" uploaded!`);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderAssets() {
+    assetGrid.innerHTML = "";
+    projectAssets.forEach(asset => {
+        const card = document.createElement("div");
+        card.className = "asset-card";
+        card.draggable = true;
+
+        card.ondragstart = (e) => {
+            e.dataTransfer.setData("type", asset.type);
+            e.dataTransfer.setData("assetSrc", asset.data);
+        };
+
+        let previewMarkup = "";
+        if (asset.type === "image") previewMarkup = `<img src="${asset.data}" />`;
+        else if (asset.type === "video") previewMarkup = `<video src="${asset.data}"></video>`;
+        else if (asset.type === "audio") previewMarkup = `<div style="font-size:24px;">🎵</div>`;
+
+        card.innerHTML = `
+            <div class="asset-card-preview">${previewMarkup}</div>
+            <div class="asset-card-name" title="${asset.name}">${asset.name}</div>
+            <div class="asset-card-actions">
+                <span style="text-transform:uppercase; font-size:9px;">${asset.type}</span>
+                <button class="btn-icon" onclick="deleteAssetCard('${asset.id}', event)">✕</button>
+            </div>
+        `;
+        assetGrid.appendChild(card);
+    });
+}
+
+function deleteAssetCard(id, event) {
+    event.stopPropagation();
+    openConfirmModal("Delete Asset", "Are you sure you want to remove this asset from the project?", () => {
+        projectAssets = projectAssets.filter(a => a.id !== id);
+        renderAssets();
+        saveWorkspace(false);
+        showToast("Asset removed.", "danger");
+    });
+}
+
+// AUTO SCALE CANVAS TO FIT SCREEN
+function fitCanvas() {
+    const padding = 40;
+    const availableWidth = canvasArea.clientWidth - padding;
+    const availableHeight = canvasArea.clientHeight - padding;
+    
+    const scaleX = availableWidth / canvas.offsetWidth;
+    const scaleY = availableHeight / canvas.offsetHeight;
+    const scale = Math.min(scaleX, scaleY, 1);
+    
+    canvas.style.transform = `scale(${scale})`;
+}
+
+function changeDevice() {
+    const val = document.getElementById("deviceSelect").value;
+    canvas.className = "canvas " + val;
+    fitCanvas();
+    
+    canvas.querySelectorAll(".element").forEach(clampPosition);
+    renderInspector();
+}
+
+window.addEventListener("resize", fitCanvas);
+
+// BOUNDARY CLAMPING ENGINE
+function clampPosition(el) {
+    const maxW = canvas.clientWidth;
+    const maxH = canvas.clientHeight;
+
+    let w = parseFloat(el.style.width) || 100;
+    let h = parseFloat(el.style.height) || 40;
+
+    w = Math.min(w, maxW);
+    h = Math.min(h, maxH);
+
+    let left = parseFloat(el.style.left) || 0;
+    let top = parseFloat(el.style.top) || 0;
+
+    left = Math.max(0, Math.min(left, maxW - w));
+    top = Math.max(0, Math.min(top, maxH - h));
+
+    el.style.width = w + "px";
+    el.style.height = h + "px";
+    el.style.left = left + "px";
+    el.style.top = top + "px";
+}
+
+// DRAG AND DROP CREATION
+document.querySelectorAll(".component-item").forEach(item => {
+    item.ondragstart = (e) => e.dataTransfer.setData("type", item.dataset.type);
+});
+
+canvas.addEventListener("dragover", e => e.preventDefault());
+canvas.addEventListener("drop", e => {
+    e.preventDefault();
+    const type = e.dataTransfer.getData("type");
+    const assetSrc = e.dataTransfer.getData("assetSrc");
+    if (!type) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const matrix = new WebKitCSSMatrix(window.getComputedStyle(canvas).transform);
+    const scale = matrix.a || 1;
+
+    let x = (e.clientX - rect.left) / scale;
+    let y = (e.clientY - rect.top) / scale;
+
+    let customConfig = null;
+    if (assetSrc) {
+        customConfig = Object.assign({}, COMPONENT_DEFAULTS[type] || COMPONENT_DEFAULTS.image, { src: assetSrc });
+    }
+
+    createElement(type, x, y, customConfig);
+});
+
+function createElement(type, x, y, customConfig = null) {
+    elementCounter++;
+    const config = customConfig || COMPONENT_DEFAULTS[type];
+    const el = document.createElement("div");
+    el.className = `element ui-${type}`;
+    el.dataset.type = type;
+    el.dataset.id = "el_" + Date.now() + "_" + elementCounter;
+    el.dataset.name = config.name || config.label || type;
+    
+    el.style.width = config.width + "px";
+    el.style.height = config.height + "px";
+    el.style.left = Math.round(x) + "px";
+    el.style.top = Math.round(y) + "px";
+    el.style.backgroundColor = config.bg;
+    el.style.color = config.color;
+    el.style.fontSize = config.fontSize + "px";
+    el.style.borderRadius = (config.radius !== undefined ? config.radius : 0) + "px";
+
+    // Typography setup
+    el.dataset.fontWeight = config.fontWeight || "normal";
+    el.dataset.fontStyle = config.fontStyle || "normal";
+    el.dataset.textAlign = config.textAlign || "left";
+    el.dataset.lineHeight = config.lineHeight || "1.2";
+    el.dataset.letterSpacing = config.letterSpacing || "0";
+
+    // Advanced CSS Properties Setup
+    el.dataset.borderWidth = config.borderWidth || 0;
+    el.dataset.borderStyle = config.borderStyle || "none";
+    el.dataset.borderColor = config.borderColor || "#000000";
+    el.dataset.shadow = config.shadow || "none";
+    el.dataset.opacity = config.opacity !== undefined ? config.opacity : 100;
+    el.dataset.transform = config.transform || "none";
+    el.dataset.rotate = config.rotate || 0;
+    el.dataset.flipX = config.flipX || "false";
+    el.dataset.flipY = config.flipY || "false";
+    el.dataset.isLocked = config.isLocked || "false";
+    el.dataset.isHidden = config.isHidden || "false";
+
+    // Interactivity Setup
+    el.dataset.clickAction = config.clickAction || "none";
+    el.dataset.clickTarget = config.clickTarget || "";
+
+    applyAdvancedCSS(el);
+
+    if (config.src) el.dataset.src = config.src;
+    if (config.progress !== undefined) el.dataset.progress = config.progress;
+    if (config.checked !== undefined) el.dataset.checked = config.checked;
+    if (config.controls !== undefined) el.dataset.controls = config.controls;
+    if (config.autoplay !== undefined) el.dataset.autoplay = config.autoplay;
+    if (config.loop !== undefined) el.dataset.loop = config.loop;
+    if (config.options !== undefined) el.dataset.options = config.options;
+    if (config.val !== undefined) el.dataset.val = config.val;
+    if (config.label !== undefined) el.dataset.label = config.label;
+
+    renderElementContent(el, config.label);
+
+    const handle = document.createElement("div");
+    handle.className = "resize-handle";
+    el.appendChild(handle);
+
+    clampPosition(el);
+    canvas.appendChild(el);
+
+    attachElementEvents(el);
+    selectElement(el);
+    updateZIndices();
+}
+
+function applyAdvancedCSS(el) {
+    const bw = el.dataset.borderWidth || 0;
+    const bs = el.dataset.borderStyle || "none";
+    const bc = el.dataset.borderColor || "#000000";
+    el.style.border = bw > 0 && bs !== "none" ? `${bw}px ${bs} ${bc}` : "none";
+
+    const shadowKey = el.dataset.shadow || "none";
+    el.style.boxShadow = SHADOW_MAP[shadowKey] || "none";
+
+    const op = el.dataset.opacity !== undefined ? el.dataset.opacity : 100;
+    el.style.opacity = op / 100;
+
+    const tr = el.dataset.transform || "none";
+    el.style.textTransform = tr === "uppercase" ? "uppercase" : (tr === "lowercase" ? "lowercase" : (tr === "capitalize" ? "capitalize" : "none"));
+
+    el.style.fontWeight = el.dataset.fontWeight || "normal";
+    el.style.fontStyle = el.dataset.fontStyle || "normal";
+    el.style.justifyContent = el.dataset.textAlign === "center" ? "center" : (el.dataset.textAlign === "right" ? "flex-end" : "flex-start");
+    el.style.lineHeight = el.dataset.lineHeight || "1.2";
+    el.style.letterSpacing = (el.dataset.letterSpacing || 0) + "px";
+
+    const rot = el.dataset.rotate || 0;
+    const fx = el.dataset.flipX === "true" ? -1 : 1;
+    const fy = el.dataset.flipY === "true" ? -1 : 1;
+    el.style.transform = `rotate(${rot}deg) scale(${fx}, ${fy})`;
+
+    el.style.display = el.dataset.isHidden === "true" ? "none" : "flex";
+}
+
+function renderElementContent(el, label) {
+    const type = el.dataset.type;
+    let handle = el.querySelector(".resize-handle");
+    el.innerHTML = "";
+
+    if (type === "image" || type === "avatar") {
+        const img = document.createElement("img");
+        img.src = el.dataset.src || "https://via.placeholder.com/150";
+        el.appendChild(img);
+    } else if (type === "video") {
+        const video = document.createElement("video");
+        video.src = el.dataset.src || "";
+        if (el.dataset.controls === "true") video.controls = true;
+        if (el.dataset.autoplay === "true") video.autoplay = true;
+        if (el.dataset.loop === "true") video.loop = true;
+        el.appendChild(video);
+    } else if (type === "audio") {
+        const audio = document.createElement("audio");
+        audio.src = el.dataset.src || "";
+        if (el.dataset.controls === "true") audio.controls = true;
+        if (el.dataset.autoplay === "true") audio.autoplay = true;
+        if (el.dataset.loop === "true") audio.loop = true;
+        el.appendChild(audio);
+    } else if (type === "toggle") {
+        const chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.checked = el.dataset.checked === "true";
+        chk.style.pointerEvents = "none";
+        const txt = document.createElement("span");
+        txt.className = "content";
+        txt.textContent = label;
+        el.appendChild(chk);
+        el.appendChild(txt);
+    } else if (type === "progress") {
+        const fill = document.createElement("div");
+        fill.className = "ui-progress-fill";
+        fill.style.width = (el.dataset.progress || 50) + "%";
+        fill.style.backgroundColor = el.style.color || "#6366f1";
+        el.appendChild(fill);
+    } else if (type === "dropdown") {
+        const sel = document.createElement("select");
+        const opts = (el.dataset.options || "Option 1, Option 2").split(",");
+        opts.forEach(o => {
+            const opt = document.createElement("option");
+            opt.value = o.trim();
+            opt.textContent = o.trim();
+            if (o.trim() === el.dataset.val) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        el.appendChild(sel);
+    } else if (type === "slider") {
+        const range = document.createElement("input");
+        range.type = "range";
+        range.value = el.dataset.val || 50;
+        el.appendChild(range);
+    } else if (type === "radio") {
+        const rad = document.createElement("input");
+        rad.type = "radio";
+        rad.checked = el.dataset.checked === "true";
+        const txt = document.createElement("span");
+        txt.className = "content";
+        txt.textContent = label;
+        el.appendChild(rad);
+        el.appendChild(txt);
+    } else if (type === "textarea") {
+        const ta = document.createElement("textarea");
+        ta.placeholder = label || "Enter notes...";
+        el.appendChild(ta);
+    } else if (type === "datepicker") {
+        const dp = document.createElement("input");
+        dp.type = "date";
+        dp.value = el.dataset.val || "2026-09-05";
+        el.appendChild(dp);
+    } else if (type === "grid") {
+        const col1 = document.createElement("div");
+        col1.className = "ui-grid-col";
+        col1.textContent = "Column 1";
+        const col2 = document.createElement("div");
+        col2.className = "ui-grid-col";
+        col2.textContent = "Column 2";
+        el.appendChild(col1);
+        el.appendChild(col2);
+    } else if (type === "accordion") {
+        const head = document.createElement("div");
+        head.className = "ui-accordion-header";
+        head.innerHTML = `<span>${label || "Header"}</span><span>▼</span>`;
+        const body = document.createElement("div");
+        body.className = "ui-accordion-body";
+        body.textContent = el.dataset.val || "Accordion content text.";
+        el.appendChild(head);
+        el.appendChild(body);
+    } else if (type === "modal") {
+        const head = document.createElement("div");
+        head.className = "ui-modal-header";
+        head.textContent = label || "Modal Title";
+        const body = document.createElement("div");
+        body.style.fontSize = "12px";
+        body.style.color = "#475569";
+        body.textContent = el.dataset.val || "Modal content goes here...";
+        el.appendChild(head);
+        el.appendChild(body);
+    } else if (type === "divider") {
+        // Line component handled via base container height/color
+    } else if (type === "statcard") {
+        const title = document.createElement("div");
+        title.className = "ui-stat-title";
+        title.textContent = label || "Stat Label";
+        const val = document.createElement("div");
+        val.className = "ui-stat-value";
+        val.textContent = el.dataset.val || "0";
+        el.appendChild(title);
+        el.appendChild(val);
+    } else if (type === "table") {
+        const tbl = document.createElement("table");
+        tbl.className = "ui-table";
+        const raw = label || "Header 1, Header 2 | Row 1, Row 2";
+        const rows = raw.split("|");
+        rows.forEach((r, idx) => {
+            const tr = document.createElement("tr");
+            const cols = r.split(",");
+            cols.forEach(c => {
+                const cell = document.createElement(idx === 0 ? "th" : "td");
+                cell.textContent = c.trim();
+                tr.appendChild(cell);
+            });
+            tbl.appendChild(tr);
+        });
+        el.appendChild(tbl);
+    } else if (type === "breadcrumbs") {
+        const crumbs = (label || "Home > Page").split(">");
+        const container = document.createElement("div");
+        container.className = "ui-breadcrumbs";
+        crumbs.forEach((c, idx) => {
+            const span = document.createElement("span");
+            span.textContent = c.trim();
+            container.appendChild(span);
+            if (idx < crumbs.length - 1) {
+                const sep = document.createElement("span");
+                sep.textContent = "/";
+                sep.style.color = "#cbd5e1";
+                container.appendChild(sep);
+            }
+        });
+        el.appendChild(container);
+    } else if (type === "pagination") {
+        const container = document.createElement("div");
+        container.className = "ui-pagination";
+        const pages = (label || "1, 2, 3").split(",");
+        const activePage = el.dataset.val || "1";
+        pages.forEach(p => {
+            const btn = document.createElement("div");
+            btn.className = "ui-page-btn" + (p.trim() === activePage ? " active" : "");
+            btn.textContent = p.trim();
+            container.appendChild(btn);
+        });
+        el.appendChild(container);
+    } else if (type === "fab") {
+        const content = document.createElement("span");
+        content.className = "content";
+        content.textContent = label || "＋";
+        el.appendChild(content);
+    } else {
+        const content = document.createElement("span");
+        content.className = "content";
+        content.textContent = label;
+        el.appendChild(content);
+    }
+
+    if (handle) el.appendChild(handle);
+    else {
+        handle = document.createElement("div");
+        handle.className = "resize-handle";
+        el.appendChild(handle);
+    }
+}
+
+// DRAG AND RESIZE HANDLERS
+function attachElementEvents(el) {
+    const handle = el.querySelector(".resize-handle");
+
+    el.addEventListener("pointerdown", e => {
+        if (el.dataset.isLocked === "true") return;
+        if (e.target.classList.contains("resize-handle")) return;
+        e.stopPropagation();
+        selectElement(el);
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const origX = parseFloat(el.style.left);
+        const origY = parseFloat(el.style.top);
+
+        const matrix = new WebKitCSSMatrix(window.getComputedStyle(canvas).transform);
+        const scale = matrix.a || 1;
+
+        function move(ev) {
+            el.style.left = Math.round(origX + (ev.clientX - startX) / scale) + "px";
+            el.style.top = Math.round(origY + (ev.clientY - startY) / scale) + "px";
+            
+            clampPosition(el);
+            syncInspectorValues();
+        }
+
+        function stop() {
+            document.removeEventListener("pointermove", move);
+            document.removeEventListener("pointerup", stop);
+        }
+
+        document.addEventListener("pointermove", move);
+        document.addEventListener("pointerup", stop);
+    });
+
+    handle.addEventListener("pointerdown", e => {
+        if (el.dataset.isLocked === "true") return;
+        e.stopPropagation();
+        e.preventDefault();
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startW = el.offsetWidth;
+        const startH = el.offsetHeight;
+
+        const matrix = new WebKitCSSMatrix(window.getComputedStyle(canvas).transform);
+        const scale = matrix.a || 1;
+
+        function resize(ev) {
+            const w = startW + (ev.clientX - startX) / scale;
+            const h = startH + (ev.clientY - startY) / scale;
+
+            el.style.width = Math.max(20, w) + "px";
+            el.style.height = Math.max(10, h) + "px";
+
+            clampPosition(el);
+            syncInspectorValues();
+        }
+
+        function stop() {
+            document.removeEventListener("pointermove", resize);
+            document.removeEventListener("pointerup", stop);
+        }
+
+        document.addEventListener("pointermove", resize);
+        document.addEventListener("pointerup", stop);
+    });
+}
+
+function selectElement(el) {
+    if (selectedElement) selectedElement.classList.remove("selected");
+    selectedElement = el;
+    if (selectedElement) selectedElement.classList.add("selected");
+    
+    renderInspector();
+    renderLayers();
+}
+
+canvas.addEventListener("click", e => {
+    if (e.target === canvas) selectElement(null);
+});
+
+// INSPECTOR SYNC
+function syncInspectorValues() {
+    if (!selectedElement) return;
+    const setValue = (id, val) => {
+        const input = document.getElementById(id);
+        if (input && document.activeElement !== input) input.value = val;
+    };
+
+    setValue("inpX", parseInt(selectedElement.style.left));
+    setValue("inpY", parseInt(selectedElement.style.top));
+    setValue("inpW", parseInt(selectedElement.style.width));
+    setValue("inpH", parseInt(selectedElement.style.height));
+}
+
+// FULL DYNAMIC MULTI-SECTION INSPECTOR
+function renderInspector() {
+    const proj = projects.find(p => p.id === activeProjectId);
+    const canvasBg = proj ? (proj.canvasBg || "#ffffff") : "#ffffff";
+
+    let html = `
+        <div class="prop-group">
+            <label>Canvas & Screen Settings</label>
+            <div class="prop-grid">
+                <div>
+                    <label>Viewport</label>
+                    <select id="inspCanvasDevice" class="prop-input">
+                        <option value="mobile" ${canvas.classList.contains("mobile") ? "selected" : ""}>Mobile (375px)</option>
+                        <option value="tablet" ${canvas.classList.contains("tablet") ? "selected" : ""}>Tablet (768px)</option>
+                        <option value="desktop" ${canvas.classList.contains("desktop") ? "selected" : ""}>Desktop (1024px)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Canvas BG</label>
+                    <input id="inspCanvasBg" class="prop-input" type="color" value="${rgbToHex(canvas.style.backgroundColor || canvasBg)}">
+                </div>
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Project Summary & Branding</label>
+            <input id="inspProjectName" class="prop-input" type="text" value="${proj ? (proj.name || "") : ""}" placeholder="Project Name" style="margin-bottom:6px;">
+            <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+                <span>Total Elements: ${canvas.querySelectorAll('.element').length}</span>
+                <button class="btn-inspector-action" onclick="openProjectSettingsModal()">⚙️ Settings</button>
+            </div>
+        </div>
+        <hr style="border:none; border-top:1px solid var(--border); margin:12px 0;">
+    `;
+
+    if (!selectedElement) {
+        html += `<p style="color:var(--text-muted); font-size:12px; text-align:center; margin-top:20px;">Select any element on the canvas to edit component-specific properties and events.</p>`;
+        inspector.innerHTML = html;
+
+        bindProp("inspCanvasDevice", val => {
+            document.getElementById("deviceSelect").value = val;
+            changeDevice();
+        });
+        bindProp("inspCanvasBg", val => {
+            canvas.style.backgroundColor = val;
+            if (proj) proj.canvasBg = val;
+            saveProjectsToStorage();
+        });
+        bindProp("inspProjectName", val => {
+            if (proj) {
+                proj.name = val;
+                saveProjectsToStorage();
+                renderProjectList();
+                applyProjectBranding(proj);
+            }
+        });
+        return;
+    }
+
+    const type = selectedElement.dataset.type;
+    const compName = selectedElement.dataset.name || COMPONENT_DEFAULTS[type].name;
+    const contentNode = selectedElement.querySelector(".content");
+    const label = contentNode ? contentNode.textContent : (selectedElement.dataset.label || "");
+    const color = rgbToHex(selectedElement.style.color);
+    const bg = rgbToHex(selectedElement.style.backgroundColor);
+    const fontSize = parseInt(selectedElement.style.fontSize) || 14;
+    const radius = parseInt(selectedElement.style.borderRadius) || 0;
+
+    // Typography
+    const fontWeight = selectedElement.dataset.fontWeight || "normal";
+    const fontStyle = selectedElement.dataset.fontStyle || "normal";
+    const textAlign = selectedElement.dataset.textAlign || "left";
+    const lineHeight = selectedElement.dataset.lineHeight || "1.2";
+    const letterSpacing = selectedElement.dataset.letterSpacing || "0";
+
+    // Advanced CSS States
+    const borderWidth = selectedElement.dataset.borderWidth || 0;
+    const borderStyle = selectedElement.dataset.borderStyle || "none";
+    const borderColor = rgbToHex(selectedElement.dataset.borderColor || "#000000");
+    const shadow = selectedElement.dataset.shadow || "none";
+    const opacity = selectedElement.dataset.opacity !== undefined ? selectedElement.dataset.opacity : 100;
+    const transform = selectedElement.dataset.transform || "none";
+    const rotate = selectedElement.dataset.rotate || 0;
+    const isLocked = selectedElement.dataset.isLocked === "true";
+    const isHidden = selectedElement.dataset.isHidden === "true";
+
+    // Interactivity
+    const clickAction = selectedElement.dataset.clickAction || "none";
+    const clickTarget = selectedElement.dataset.clickTarget || "";
+
+    const src = selectedElement.dataset.src || "";
+    const progress = selectedElement.dataset.progress || 50;
+    const checked = selectedElement.dataset.checked === "true";
+    const controls = selectedElement.dataset.controls === "true";
+    const autoplay = selectedElement.dataset.autoplay === "true";
+    const options = selectedElement.dataset.options || "";
+    const val = selectedElement.dataset.val || "";
+
+    let extraControls = "";
+
+    if (type === "image" || type === "avatar" || type === "video" || type === "audio") {
+        let assetOptions = projectAssets
+            .filter(a => type === "avatar" ? a.type === "image" : a.type === type)
+            .map(a => `<option value="${a.data}">Local: ${a.name}</option>`).join("");
+
+        extraControls += `
+            <div class="prop-group">
+                <label>Media Source URL / Asset</label>
+                <input id="inpSrc" class="prop-input" type="text" value="${src.length > 80 ? '[Local File Data]' : src}" style="margin-bottom:6px;">
+                ${assetOptions ? `
+                <select id="inpAssetSelect" class="prop-input">
+                    <option value="">-- Choose from Project Assets --</option>
+                    ${assetOptions}
+                </select>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    if (type === "video" || type === "audio") {
+        extraControls += `
+            <div class="prop-group">
+                <label>Playback Options</label>
+                <div class="prop-grid">
+                    <div><label>Controls</label><select id="inpControls" class="prop-input"><option value="true" ${controls ? "selected" : ""}>Show</option><option value="false" ${!controls ? "selected" : ""}>Hide</option></select></div>
+                    <div><label>Autoplay</label><select id="inpAutoplay" class="prop-input"><option value="true" ${autoplay ? "selected" : ""}>Yes</option><option value="false" ${!autoplay ? "selected" : ""}>No</option></select></div>
+                </div>
+            </div>
+        `;
+    }
+
+    if (type === "toggle" || type === "radio") {
+        extraControls += `
+            <div class="prop-group">
+                <label>Default State</label>
+                <select id="inpChecked" class="prop-input">
+                    <option value="true" ${checked ? "selected" : ""}>Checked / Active</option>
+                    <option value="false" ${!checked ? "selected" : ""}>Unchecked / Inactive</option>
+                </select>
+            </div>
+        `;
+    }
+
+    if (type === "dropdown") {
+        extraControls += `
+            <div class="prop-group">
+                <label>Dropdown Options (Comma-separated)</label>
+                <input id="inpOptions" class="prop-input" type="text" value="${options}">
+            </div>
+        `;
+    }
+
+    if (type === "slider" || type === "datepicker" || type === "statcard" || type === "accordion" || type === "modal" || type === "pagination") {
+        extraControls += `
+            <div class="prop-group">
+                <label>Value / Body Content</label>
+                <input id="inpVal" class="prop-input" type="text" value="${val}">
+            </div>
+        `;
+    }
+
+    if (type === "progress") {
+        extraControls += `
+            <div class="prop-group">
+                <label>Progress Value (%)</label>
+                <input id="inpProgress" class="prop-input" type="number" min="0" max="100" value="${progress}">
+            </div>
+        `;
+    }
+
+    html += `
+        <div class="prop-group">
+            <label>Component Quick Actions</label>
+            <div class="inspector-actions-grid">
+                <button class="btn-inspector-action" onclick="duplicateElement()">📋 Copy</button>
+                <button class="btn-inspector-action" onclick="toggleLock()">${isLocked ? "🔓 Unlock" : "🔒 Lock"}</button>
+                <button class="btn-inspector-action" onclick="toggleHide()">${isHidden ? "👁️ Show" : "🙈 Hide"}</button>
+                <button class="btn-inspector-action" onclick="deleteSelected()" style="color:#ef4444;">🗑️ Delete</button>
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Component Label / Identifier</label>
+            <input id="inpCompName" class="prop-input" type="text" value="${compName}">
+        </div>
+
+        <div class="prop-group">
+            <label>Interactivity & Click Events</label>
+            <div style="margin-bottom:6px;">
+                <label>On Click Action</label>
+                <select id="inpClickAction" class="prop-input">
+                    <option value="none" ${clickAction === "none" ? "selected" : ""}>None</option>
+                    <option value="navigate" ${clickAction === "navigate" ? "selected" : ""}>Navigate to URL / Link</option>
+                    <option value="alert" ${clickAction === "alert" ? "selected" : ""}>Show Alert Dialog</option>
+                    <option value="toggle" ${clickAction === "toggle" ? "selected" : ""}>Toggle Element Visibility</option>
+                    <option value="custom" ${clickAction === "custom" ? "selected" : ""}>Custom JavaScript Function</option>
+                </select>
+            </div>
+            <div>
+                <label>Action Target / Code</label>
+                <input id="inpClickTarget" class="prop-input" type="text" value="${clickTarget}" placeholder="https://, message, element name, or JS">
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Alignment & Layout Tools</label>
+            <div class="inspector-actions-grid">
+                <button class="btn-inspector-action" onclick="alignElement('left')">⬅️ Left</button>
+                <button class="btn-inspector-action" onclick="alignElement('center')">↔️ Center</button>
+                <button class="btn-inspector-action" onclick="alignElement('right')">➡️ Right</button>
+                <button class="btn-inspector-action" onclick="alignElement('top')">⬆️ Top</button>
+                <button class="btn-inspector-action" onclick="alignElement('middle')">↕️ Mid</button>
+                <button class="btn-inspector-action" onclick="alignElement('bottom')">⬇️ Bottom</button>
+                <button class="btn-inspector-action" onclick="alignElement('fullWidth')">↔️ Fit W</button>
+                <button class="btn-inspector-action" onclick="alignElement('fullHeight')">↕️ Fit H</button>
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Dimensions & Position</label>
+            <div class="prop-grid">
+                <div><label>X (px)</label><input id="inpX" class="prop-input" type="number" value="${parseInt(selectedElement.style.left)}"></div>
+                <div><label>Y (px)</label><input id="inpY" class="prop-input" type="number" value="${parseInt(selectedElement.style.top)}"></div>
+                <div><label>Width</label><input id="inpW" class="prop-input" type="number" value="${parseInt(selectedElement.style.width)}"></div>
+                <div><label>Height</label><input id="inpH" class="prop-input" type="number" value="${parseInt(selectedElement.style.height)}"></div>
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Transform & Orientation</label>
+            <div class="prop-grid">
+                <div><label>Rotation (°)</label><input id="inpRotate" class="prop-input" type="number" value="${rotate}"></div>
+                <div><label>Flip Matrix</label>
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn-inspector-action" style="flex:1;" onclick="toggleFlip('X')">↔️ Flip X</button>
+                        <button class="btn-inspector-action" style="flex:1;" onclick="toggleFlip('Y')">↕️ Flip Y</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Layer Ordering</label>
+            <div class="inspector-actions-grid">
+                <button class="btn-inspector-action" onclick="moveZIndex('top')">🔝 Front</button>
+                <button class="btn-inspector-action" onclick="moveZIndex('up')">🔼 Up</button>
+                <button class="btn-inspector-action" onclick="moveZIndex('down')">🔽 Down</button>
+                <button class="btn-inspector-action" onclick="moveZIndex('bottom')">🔚 Back</button>
+            </div>
+        </div>
+
+        ${type !== "image" && type !== "avatar" && type !== "video" && type !== "audio" && type !== "progress" && type !== "slider" && type !== "datepicker" && type !== "divider" && type !== "grid" ? `
+        <div class="prop-group">
+            <label>Content / Header / Data Format</label>
+            <input id="inpLabel" class="prop-input" type="text" value="${label}">
+        </div>
+        ` : ''}
+
+        ${extraControls}
+
+        <div class="prop-group">
+            <label>Typography & Formatting</label>
+            <div class="prop-grid" style="margin-bottom:8px;">
+                <div><label>Font Size</label><input id="inpFontSize" class="prop-input" type="number" value="${fontSize}"></div>
+                <div><label>Font Weight</label>
+                    <select id="inpFontWeight" class="prop-input">
+                        <option value="normal" ${fontWeight === "normal" ? "selected" : ""}>Normal</option>
+                        <option value="600" ${fontWeight === "600" ? "selected" : ""}>Semibold</option>
+                        <option value="bold" ${fontWeight === "bold" ? "selected" : ""}>Bold</option>
+                    </select>
+                </div>
+            </div>
+            <div class="prop-grid" style="margin-bottom:8px;">
+                <div><label>Line Height</label><input id="inpLineHeight" class="prop-input" type="number" step="0.1" value="${lineHeight}"></div>
+                <div><label>Letter Spacing</label><input id="inpLetterSpacing" class="prop-input" type="number" step="0.5" value="${letterSpacing}"></div>
+            </div>
+            <div class="prop-grid" style="margin-bottom:8px;">
+                <div><label>Text Align</label>
+                    <select id="inpTextAlign" class="prop-input">
+                        <option value="left" ${textAlign === "left" ? "selected" : ""}>Left</option>
+                        <option value="center" ${textAlign === "center" ? "selected" : ""}>Center</option>
+                        <option value="right" ${textAlign === "right" ? "selected" : ""}>Right</option>
+                    </select>
+                </div>
+                <div><label>Text Case</label>
+                    <select id="inpTransform" class="prop-input">
+                        <option value="none" ${transform === "none" ? "selected" : ""}>Normal</option>
+                        <option value="uppercase" ${transform === "uppercase" ? "selected" : ""}>UPPERCASE</option>
+                        <option value="lowercase" ${transform === "lowercase" ? "selected" : ""}>lowercase</option>
+                        <option value="capitalize" ${transform === "capitalize" ? "selected" : ""}>Capitalize</option>
+                    </select>
+                </div>
+            </div>
+            <div class="prop-grid">
+                <div><label>Primary/Text</label><input id="inpColor" class="prop-input" type="color" value="${color}"></div>
+                <div><label>Background</label><input id="inpBg" class="prop-input" type="color" value="${bg}"></div>
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Borders & Radius</label>
+            <div class="prop-grid" style="margin-bottom:8px;">
+                <div><label>Border Width</label><input id="inpBorderWidth" class="prop-input" type="number" min="0" value="${borderWidth}"></div>
+                <div><label>Border Style</label>
+                    <select id="inpBorderStyle" class="prop-input">
+                        <option value="none" ${borderStyle === "none" ? "selected" : ""}>None</option>
+                        <option value="solid" ${borderStyle === "solid" ? "selected" : ""}>Solid</option>
+                        <option value="dashed" ${borderStyle === "dashed" ? "selected" : ""}>Dashed</option>
+                        <option value="dotted" ${borderStyle === "dotted" ? "selected" : ""}>Dotted</option>
+                    </select>
+                </div>
+            </div>
+            <div class="prop-grid">
+                <div><label>Border Color</label><input id="inpBorderColor" class="prop-input" type="color" value="${borderColor}"></div>
+                <div><label>Border Radius</label><input id="inpRadius" class="prop-input" type="number" value="${radius}"></div>
+            </div>
+        </div>
+
+        <div class="prop-group">
+            <label>Shadow & Opacity</label>
+            <div class="prop-grid">
+                <div><label>Box Shadow</label>
+                    <select id="inpShadow" class="prop-input">
+                        <option value="none" ${shadow === "none" ? "selected" : ""}>None</option>
+                        <option value="sm" ${shadow === "sm" ? "selected" : ""}>Small</option>
+                        <option value="md" ${shadow === "md" ? "selected" : ""}>Medium</option>
+                        <option value="lg" ${shadow === "lg" ? "selected" : ""}>Large</option>
+                        <option value="xl" ${shadow === "xl" ? "selected" : ""}>Extra Large</option>
+                    </select>
+                </div>
+                <div><label>Opacity (%)</label><input id="inpOpacity" class="prop-input" type="number" min="0" max="100" value="${opacity}"></div>
+            </div>
+        </div>
+
+        <button class="btn-delete" onclick="deleteSelected()">Delete Component</button>
+    `;
+
+    inspector.innerHTML = html;
+
+    // Bind Base Canvas Controls
+    bindProp("inspCanvasDevice", val => {
+        document.getElementById("deviceSelect").value = val;
+        changeDevice();
+    });
+    bindProp("inspCanvasBg", val => {
+        canvas.style.backgroundColor = val;
+        if (proj) proj.canvasBg = val;
+        saveProjectsToStorage();
+    });
+    bindProp("inspProjectName", val => {
+        if (proj) {
+            proj.name = val;
+            saveProjectsToStorage();
+            renderProjectList();
+            applyProjectBranding(proj);
+        }
+    });
+
+    // Bind Component Controls
+    bindProp("inpCompName", val => { selectedElement.dataset.name = val; renderLayers(); });
+    bindProp("inpClickAction", val => { selectedElement.dataset.clickAction = val; });
+    bindProp("inpClickTarget", val => { selectedElement.dataset.clickTarget = val; });
+    bindProp("inpX", val => { selectedElement.style.left = val + "px"; clampPosition(selectedElement); });
+    bindProp("inpY", val => { selectedElement.style.top = val + "px"; clampPosition(selectedElement); });
+    bindProp("inpW", val => { selectedElement.style.width = val + "px"; clampPosition(selectedElement); });
+    bindProp("inpH", val => { selectedElement.style.height = val + "px"; clampPosition(selectedElement); });
+    bindProp("inpLabel", val => { selectedElement.dataset.label = val; renderElementContent(selectedElement, val); renderLayers(); });
+    bindProp("inpFontSize", val => { selectedElement.style.fontSize = val + "px"; });
+    bindProp("inpFontWeight", val => { selectedElement.dataset.fontWeight = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpTextAlign", val => { selectedElement.dataset.textAlign = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpLineHeight", val => { selectedElement.dataset.lineHeight = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpLetterSpacing", val => { selectedElement.dataset.letterSpacing = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpRadius", val => { selectedElement.style.borderRadius = val + "px"; });
+    bindProp("inpColor", val => { 
+        selectedElement.style.color = val; 
+        if(type === "progress" || type === "divider") renderElementContent(selectedElement, label);
+    });
+    bindProp("inpBg", val => { selectedElement.style.backgroundColor = val; });
+
+    // Advanced CSS Bindings
+    bindProp("inpBorderWidth", val => { selectedElement.dataset.borderWidth = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpBorderStyle", val => { selectedElement.dataset.borderStyle = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpBorderColor", val => { selectedElement.dataset.borderColor = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpShadow", val => { selectedElement.dataset.shadow = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpOpacity", val => { selectedElement.dataset.opacity = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpTransform", val => { selectedElement.dataset.transform = val; applyAdvancedCSS(selectedElement); });
+    bindProp("inpRotate", val => { selectedElement.dataset.rotate = val; applyAdvancedCSS(selectedElement); });
+
+    bindProp("inpSrc", val => {
+        selectedElement.dataset.src = val;
+        renderElementContent(selectedElement, label);
+    });
+
+    bindProp("inpAssetSelect", val => {
+        if (!val) return;
+        selectedElement.dataset.src = val;
+        renderElementContent(selectedElement, label);
+        renderInspector();
+    });
+
+    bindProp("inpControls", val => {
+        selectedElement.dataset.controls = val;
+        renderElementContent(selectedElement, label);
+    });
+
+    bindProp("inpAutoplay", val => {
+        selectedElement.dataset.autoplay = val;
+        renderElementContent(selectedElement, label);
+    });
+
+    bindProp("inpChecked", val => {
+        selectedElement.dataset.checked = val;
+        renderElementContent(selectedElement, label);
+    });
+
+    bindProp("inpProgress", val => {
+        selectedElement.dataset.progress = val;
+        renderElementContent(selectedElement, label);
+    });
+
+    bindProp("inpOptions", val => {
+        selectedElement.dataset.options = val;
+        renderElementContent(selectedElement, label);
+    });
+
+    bindProp("inpVal", val => {
+        selectedElement.dataset.val = val;
+        renderElementContent(selectedElement, label);
+    });
+}
+
+function bindProp(id, callback) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.addEventListener("input", () => callback(input.value));
+    input.addEventListener("change", () => callback(input.value));
+}
+
+// INSPECTOR FEATURE HELPER FUNCTIONS
+function alignElement(alignment) {
+    if (!selectedElement) return;
+    const canvasW = canvas.clientWidth;
+    const canvasH = canvas.clientHeight;
+    const w = parseFloat(selectedElement.style.width) || 100;
+    const h = parseFloat(selectedElement.style.height) || 40;
+
+    switch (alignment) {
+        case 'left':
+            selectedElement.style.left = "0px";
+            break;
+        case 'center':
+            selectedElement.style.left = Math.round((canvasW - w) / 2) + "px";
+            break;
+        case 'right':
+            selectedElement.style.left = Math.round(canvasW - w) + "px";
+            break;
+        case 'top':
+            selectedElement.style.top = "0px";
+            break;
+        case 'middle':
+            selectedElement.style.top = Math.round((canvasH - h) / 2) + "px";
+            break;
+        case 'bottom':
+            selectedElement.style.top = Math.round(canvasH - h) + "px";
+            break;
+        case 'fullWidth':
+            selectedElement.style.left = "0px";
+            selectedElement.style.width = canvasW + "px";
+            break;
+        case 'fullHeight':
+            selectedElement.style.top = "0px";
+            selectedElement.style.height = canvasH + "px";
+            break;
+    }
+    clampPosition(selectedElement);
+    syncInspectorValues();
+}
+
+function moveZIndex(direction) {
+    if (!selectedElement) return;
+    if (direction === 'top') {
+        canvas.appendChild(selectedElement);
+    } else if (direction === 'bottom') {
+        canvas.insertBefore(selectedElement, canvas.firstChild);
+    } else if (direction === 'up') {
+        if (selectedElement.nextElementSibling) {
+            canvas.insertBefore(selectedElement.nextElementSibling, selectedElement);
+        }
+    } else if (direction === 'down') {
+        if (selectedElement.previousElementSibling) {
+            canvas.insertBefore(selectedElement, selectedElement.previousElementSibling);
+        }
+    }
+    updateZIndices();
+    renderLayers();
+}
+
+function duplicateElement() {
+    if (!selectedElement) return;
+    const type = selectedElement.dataset.type;
+    const x = (parseFloat(selectedElement.style.left) || 0) + 15;
+    const y = (parseFloat(selectedElement.style.top) || 0) + 15;
+    
+    const contentNode = selectedElement.querySelector(".content");
+    const customConfig = {
+        name: (selectedElement.dataset.name || COMPONENT_DEFAULTS[type].name) + " Copy",
+        width: parseInt(selectedElement.style.width),
+        height: parseInt(selectedElement.style.height),
+        color: rgbToHex(selectedElement.style.color),
+        bg: rgbToHex(selectedElement.style.backgroundColor),
+        fontSize: parseInt(selectedElement.style.fontSize) || 14,
+        fontWeight: selectedElement.dataset.fontWeight || "normal",
+        fontStyle: selectedElement.dataset.fontStyle || "normal",
+        textAlign: selectedElement.dataset.textAlign || "left",
+        lineHeight: parseFloat(selectedElement.dataset.lineHeight) || 1.2,
+        letterSpacing: parseFloat(selectedElement.dataset.letterSpacing) || 0,
+        radius: parseInt(selectedElement.style.borderRadius) || 0,
+        borderWidth: parseInt(selectedElement.dataset.borderWidth) || 0,
+        borderStyle: selectedElement.dataset.borderStyle || "none",
+        borderColor: selectedElement.dataset.borderColor || "#000000",
+        shadow: selectedElement.dataset.shadow || "none",
+        opacity: parseInt(selectedElement.dataset.opacity) || 100,
+        transform: selectedElement.dataset.transform || "none",
+        rotate: parseInt(selectedElement.dataset.rotate) || 0,
+        flipX: selectedElement.dataset.flipX === "true",
+        flipY: selectedElement.dataset.flipY === "true",
+        isLocked: false,
+        isHidden: false,
+        clickAction: selectedElement.dataset.clickAction || "none",
+        clickTarget: selectedElement.dataset.clickTarget || "",
+        src: selectedElement.dataset.src || "",
+        progress: selectedElement.dataset.progress || 50,
+        checked: selectedElement.dataset.checked === "true",
+        controls: selectedElement.dataset.controls === "true",
+        autoplay: selectedElement.dataset.autoplay === "true",
+        loop: selectedElement.dataset.loop === "true",
+        label: contentNode ? contentNode.textContent : (selectedElement.dataset.label || ""),
+        options: selectedElement.dataset.options || "",
+        val: selectedElement.dataset.val || ""
+    };
+
+    createElement(type, x, y, customConfig);
+    showToast("Component duplicated!");
+}
+
+function toggleLock() {
+    if (!selectedElement) return;
+    const isLocked = selectedElement.dataset.isLocked === "true";
+    selectedElement.dataset.isLocked = (!isLocked).toString();
+    renderInspector();
+    showToast(isLocked ? "Component unlocked" : "Component locked");
+}
+
+function toggleHide() {
+    if (!selectedElement) return;
+    const isHidden = selectedElement.dataset.isHidden === "true";
+    selectedElement.dataset.isHidden = (!isHidden).toString();
+    applyAdvancedCSS(selectedElement);
+    renderInspector();
+    renderLayers();
+    showToast(isHidden ? "Component visible" : "Component hidden");
+}
+
+function toggleFlip(axis) {
+    if (!selectedElement) return;
+    if (axis === 'X') {
+        const val = selectedElement.dataset.flipX === "true";
+        selectedElement.dataset.flipX = (!val).toString();
+    } else if (axis === 'Y') {
+        const val = selectedElement.dataset.flipY === "true";
+        selectedElement.dataset.flipY = (!val).toString();
+    }
+    applyAdvancedCSS(selectedElement);
+}
+
+function deleteSelected() {
+    if (!selectedElement) return;
+    selectedElement.remove();
+    selectedElement = null;
+    renderInspector();
+    renderLayers();
+    updateZIndices();
+    showToast("Component deleted", "danger");
+}
+
+// DRAGGABLE LAYERS SYSTEM
+let draggedLayerId = null;
+
+function renderLayers() {
+    layerList.innerHTML = "";
+    
+    const elements = Array.from(canvas.querySelectorAll(".element")).reverse();
+    
+    elements.forEach(el => {
+        const item = document.createElement("div");
+        item.className = "layer-item" + (el === selectedElement ? " active" : "");
+        item.draggable = true;
+        item.dataset.id = el.dataset.id;
+
+        let title = el.dataset.name || COMPONENT_DEFAULTS[el.dataset.type].name;
+
+        item.innerHTML = `
+            <div class="layer-title-wrapper">
+                <span class="layer-drag-handle">⣿</span>
+                <span>${title}</span>
+            </div>
+            <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">${el.dataset.type}</span>
+        `;
+
+        item.onclick = (e) => {
+            selectElement(el);
+        };
+
+        item.ondragstart = (e) => {
+            draggedLayerId = el.dataset.id;
+            item.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+        };
+
+        item.ondragend = () => {
+            item.classList.remove("dragging");
+            document.querySelectorAll(".layer-item").forEach(i => {
+                i.classList.remove("drag-over-top", "drag-over-bottom");
+            });
+        };
+
+        item.ondragover = (e) => {
+            e.preventDefault();
+            if (draggedLayerId === el.dataset.id) return;
+
+            const rect = item.getBoundingClientRect();
+            const midPoint = rect.top + rect.height / 2;
+
+            if (e.clientY < midPoint) {
+                item.classList.add("drag-over-top");
+                item.classList.remove("drag-over-bottom");
+            } else {
+                item.classList.add("drag-over-bottom");
+                item.classList.remove("drag-over-top");
+            }
+        };
+
+        item.ondragleave = () => {
+            item.classList.remove("drag-over-top", "drag-over-bottom");
+        };
+
+        item.ondrop = (e) => {
+            e.preventDefault();
+            item.classList.remove("drag-over-top", "drag-over-bottom");
+
+            if (!draggedLayerId || draggedLayerId === el.dataset.id) return;
+
+            const draggedEl = canvas.querySelector(`[data-id="${draggedLayerId}"]`);
+            const targetEl = el;
+
+            if (!draggedEl || !targetEl) return;
+
+            const rect = item.getBoundingClientRect();
+            const midPoint = rect.top + rect.height / 2;
+
+            if (e.clientY < midPoint) {
+                canvas.insertBefore(draggedEl, targetEl.nextSibling);
+            } else {
+                canvas.insertBefore(draggedEl, targetEl);
+            }
+
+            updateZIndices();
+            renderLayers();
+        };
+
+        layerList.appendChild(item);
+    });
+}
+
+function updateZIndices() {
+    const elements = canvas.querySelectorAll(".element");
+    elements.forEach((el, index) => {
+        el.style.zIndex = index + 1;
+    });
+}
+
+function clearCanvas() {
+    canvas.innerHTML = "";
+    selectElement(null);
+    renderLayers();
+}
+
+function rgbToHex(rgb) {
+    if (!rgb || rgb === "transparent") return "#ffffff";
+    if (rgb.startsWith("#")) return rgb;
+    const values = rgb.match(/\d+/g);
+    if (!values) return "#ffffff";
+    return "#" + values.slice(0, 3).map(x => parseInt(x).toString(16).padStart(2, "0")).join("");
+}
+
+// EXPORT TO PNG
+function exportPNG() {
+    selectElement(null);
+    showToast("Generating image preview...");
+    html2canvas(canvas, { scale: 2 }).then(canvasObj => {
+        const link = document.createElement("a");
+        link.download = `ProStudio_Export_${Date.now()}.png`;
+        link.href = canvasObj.toDataURL("image/png");
+        link.click();
+        showToast("Image exported successfully!");
+    });
+}
+
+// EXPORT TO ZIP
+function exportZIP() {
+    selectElement(null);
+    showToast("Bundling ZIP archive...");
+    const zip = new JSZip();
+
+    const code = generateFullHTMLCode();
+    zip.file("index.html", code);
+
+    const proj = projects.find(p => p.id === activeProjectId);
+    zip.file("project.json", JSON.stringify(proj || {}, null, 2));
+
+    zip.generateAsync({ type: "blob" }).then(content => {
+        const link = document.createElement("a");
+        link.download = `ProStudio_Project_${Date.now()}.zip`;
+        link.href = URL.createObjectURL(content);
+        link.click();
+        showToast("ZIP Archive downloaded!");
+    });
+}
+
+// EXPORT CODE GENERATOR
+function exportHTML() {
+    selectElement(null);
+    document.getElementById("exportCode").value = generateFullHTMLCode();
+    openModal("exportModal");
+}
+
+function copyCode() {
+    const copyText = document.getElementById("exportCode");
+    copyText.select();
+    navigator.clipboard.writeText(copyText.value);
+    showToast("Code copied to clipboard!");
+}
+
+function generateFullHTMLCode() {
+    const proj = projects.find(p => p.id === activeProjectId);
+    const canvasBg = proj ? (proj.canvasBg || "#ffffff") : "#ffffff";
+    let bodyMarkup = "";
+    let interactivityJS = "";
+
+    canvas.querySelectorAll(".element").forEach(el => {
+        const clone = el.cloneNode(true);
+        const handle = clone.querySelector(".resize-handle");
+        if (handle) handle.remove();
+        clone.classList.remove("selected");
+        bodyMarkup += `    ${clone.outerHTML}\n`;
+
+        const action = el.dataset.clickAction;
+        const target = el.dataset.clickTarget;
+        const name = el.dataset.name || el.dataset.id;
+
+        if (action === "navigate") {
+            interactivityJS += `    document.querySelector('[data-id="${el.dataset.id}"]').onclick = () => window.location.href = "${target}";\n`;
+        } else if (action === "alert") {
+            interactivityJS += `    document.querySelector('[data-id="${el.dataset.id}"]').onclick = () => alert("${target || 'Clicked ' + name}");\n`;
+        } else if (action === "toggle") {
+            interactivityJS += `    document.querySelector('[data-id="${el.dataset.id}"]').onclick = () => { const targetEl = document.querySelector('[data-name="${target}"]') || document.querySelector('${target}'); if (targetEl) targetEl.style.display = targetEl.style.display === 'none' ? 'flex' : 'none'; };\n`;
+        } else if (action === "custom") {
+            interactivityJS += `    document.querySelector('[data-id="${el.dataset.id}"]').onclick = () => { ${target} };\n`;
+        }
+    });
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${proj ? proj.name : "Exported Interface"}</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #0f172a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .exported-screen {
+        position: relative;
+        width: ${canvas.offsetWidth}px;
+        height: ${canvas.offsetHeight}px;
+        background: ${canvasBg};
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .element {
+        position: absolute;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .ui-text { justify-content: flex-start; padding: 4px; }
+    .ui-image img, .ui-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .ui-video video, .ui-audio audio { width: 100%; height: 100%; }
+    .ui-progress-fill { height: 100%; }
+    .ui-table { width: 100%; border-collapse: collapse; }
+    .ui-table th, .ui-table td { border: 1px solid #cbd5e1; padding: 6px; }
+</style>
+</head>
+<body>
+
+<div class="exported-screen">
+${bodyMarkup}</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+${interactivityJS}});
+<\/script>
+</body>
+</html>`;
+}
+
+// INITIALIZE SYSTEM
+window.onload = () => {
+    initProjectManager();
+    fitCanvas();
+};
+</script>
+</body>
+</html>
